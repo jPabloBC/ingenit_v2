@@ -1,103 +1,134 @@
+ "use client";
 import Image from "next/image";
+import { Globe, Smartphone, Code2, Laptop, Bot, Settings } from "lucide-react";
+
+function closeMobileMenu() {
+  document.getElementById("mobile-menu")?.classList.add("translate-x-[100%]");
+  document.getElementById("menu-overlay")?.classList.add("hidden");
+}
+
+function ProductCard({
+  title,
+  Icon,
+}: {
+  title: string;
+  Icon: React.ElementType;
+}) {
+  return (
+    <div className="group bg-white p-6 rounded-xl shadow hover:shadow-lg transition text-center">
+      <div className="flex flex-col items-center justify-center">
+        <Icon
+          className="w-12 h-12 text-blue4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-300 mb-2"
+          strokeWidth={1}
+        />
+        <h3 className="text-base font-semibold text-gray4">{title}</h3>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+    <main className="min-h-screen bg-white text-gray2 font-body">
+      <header className="fixed top-0 left-0 w-full px-6 py-3 flex justify-between items-center shadow-md bg-white z-50">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
+          src="/assets/logo_transparent_ingenIT.png"
+          alt="Logo IngenIT"
+          width={140}
+          height={40}
           priority
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="md:hidden">
+          <button
+            onClick={() => {
+              document.getElementById("mobile-menu")?.classList.toggle("translate-x-[100%]");
+              document.getElementById("menu-overlay")?.classList.toggle("hidden");
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <svg
+              className="w-6 h-6 text-blue4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <nav className="hidden md:flex space-x-4 text-sm font-normal">
+          <a href="#servicios" className="text-blue2 hover:text-blue4">Servicios</a>
+          <a href="#productos" className="text-blue2 hover:text-blue4">Productos</a>
+          <a href="#contacto" className="text-blue2 hover:text-blue4">Contacto</a>
+        </nav>
+      </header>
+      
+      <div
+        id="menu-overlay"
+        className="fixed inset-0 bg-blue1 bg-opacity-80 z-40 hidden md:hidden"
+          onClick={() => {
+            document.getElementById("mobile-menu")?.classList.toggle("translate-x-[100%]");
+            document.getElementById("menu-overlay")?.classList.toggle("hidden");
+          }}
+      ></div>
+
+      <div
+        id="mobile-menu"
+        className="fixed top-0 right-0 h-full w-[30vw] max-w-[280px] bg-white shadow-lg z-50 transform translate-x-[100%] transition-transform duration-300 md:hidden"
+      >
+        <div className="p-6 flex flex-col space-y-4 text-sm font-semibold text-gray2">
+          <button
+            onClick={() => {
+              document.getElementById("mobile-menu")?.classList.add("translate-x-[100%]");
+              document.getElementById("menu-overlay")?.classList.add("hidden");
+            }}
+            className="self-end text-blue4 text-xl"
+          >
+            ✕
+          </button>
+          <a href="#servicios" onClick={() => closeMobileMenu()}>Servicios</a>
+          <a href="#productos" onClick={() => closeMobileMenu()}>Productos</a>
+          <a href="#contacto" onClick={() => closeMobileMenu()}>Contacto</a>
+        </div>
+      </div>
+
+      <section className="pt-[160px] flex flex-col items-center justify-center text-center px-6 py-24 bg-gray10">
+        <h1 className="text-4xl font-title text-blue2 mb-4">Soluciones Web y App a tu medida</h1>
+        <p className="text-lg max-w-xl mb-8">Desarrollamos software personalizado, apps móviles, web apps y herramientas para automatizar tu negocio.</p>
+        <a href="#contacto" className="bg-blue4 text-white px-6 py-3 rounded-xl hover:bg-blue5 transition font-semibold">Contáctanos</a>
+      </section>
+
+      <section id="productos" className="px-6 py-16 text-center">
+        <h2 className="text-2xl font-title text-blue2 mb-6">Nuestros Productos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="group bg-white p-6 rounded-xl shadow hover:shadow-lg transition text-center">
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-300 mb-2">
+                <Laptop className="w-12 h-12 text-blue4" strokeWidth={1} />
+                <Smartphone className="w-12 h-12 text-blue4" strokeWidth={1} />
+              </div>
+              <h3 className="text-base font-semibold text-gray4">AppWeb / App</h3>
+            </div>
+          </div>
+
+          <ProductCard title="ChatBot" Icon={Bot} />
+          <ProductCard title="SoftLogic" Icon={Settings} />
+        </div>
+      </section>
+
+      <section id="contacto" className="px-6 py-16 text-center bg-gray10">
+        <h2 className="text-2xl font-title text-blue2 mb-4">Hablemos</h2>
+        <p className="mb-6">Escríbenos para empezar tu próximo proyecto tecnológico.</p>
+        <a href="mailto:contacto@ingenit.cl" className="text-gray5 font-normal hover:text-gray3">gerencia@ingenit.cl</a>
+      </section>
+
+      <footer className="text-center py-6 text-sm text-gray5 border-t">© 2025 IngenIT. Todos los derechos reservados.</footer>
+    </main>
   );
 }
