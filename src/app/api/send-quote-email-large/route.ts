@@ -13,8 +13,17 @@ export async function POST(request: NextRequest) {
     console.log('📊 Tamaño del PDF:', Math.round((quoteData.pdfBase64.length * 3) / 4 / 1024 / 1024 * 100) / 100, 'MB');
 
     // Limpiar el asunto para evitar caracteres especiales
-    const cleanQuoteNumber = (quoteData.quote_number || quoteData.id || '').toString().replace(/[^\w\s-]/g, '');
-    const cleanProjectTitle = (quoteData.project_title || '').toString().replace(/[^\w\s-]/g, '');
+    const cleanQuoteNumber = (quoteData.quote_number || quoteData.id || '').toString()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    const cleanProjectTitle = (quoteData.project_title || '').toString()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .substring(0, 50); // Limitar a 50 caracteres
+    
     const subject = `Cotizacion ${cleanQuoteNumber} - ${cleanProjectTitle}`;
     
     const subtotal = (quoteData.total_amount || 0) + (quoteData.equipment_total || 0);
