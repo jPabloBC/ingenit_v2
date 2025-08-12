@@ -75,41 +75,103 @@ export default function WebChatBot() {
     }, []);
 
     async function insertToSupabase(sender: "user" | "bot", message: string, step: number, sid: string) {
-        await supabase!.from("web_chat").insert({ sender, message, step, session_id: sid });
+        console.log('💾 Intentando insertar en Supabase:', { sender, message, step, session_id: sid });
+        
+        try {
+            const { data, error } = await supabase!.from("web_chat").insert({ 
+                sender, 
+                message, 
+                step, 
+                session_id: sid 
+            });
+            
+            if (error) {
+                console.error('❌ Error insertando en Supabase:', error);
+                throw error;
+            }
+            
+            console.log('✅ Insertado exitosamente en Supabase:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Error en insertToSupabase:', error);
+            throw error;
+        }
     }
 
     const handleSend = async () => {
-        if (!input.trim()) return;
+        console.log('🚀 handleSend iniciado');
+        console.log('📝 Input actual:', input);
+        console.log('📊 Step actual:', step);
+        
+        if (!input.trim()) {
+            console.log('❌ Input vacío, retornando');
+            return;
+        }
 
         const userMessage = input.trim();
+        console.log('✅ Mensaje del usuario:', userMessage);
 
         // Validaciones por paso
         if (step === 1 && userMessage.length < 2) {
+            console.log('❌ Nombre muy corto');
             alert("Por favor, ingresa un nombre válido.");
             return;
         }
 
         if (step === 2 && !/\S+@\S+\.\S+/.test(userMessage)) {
+            console.log('❌ Email inválido');
             alert("Por favor, ingresa un correo electrónico válido.");
             return;
         }
 
+        console.log('✅ Validaciones pasadas, guardando mensaje del usuario');
+        
         // Guardar mensaje del usuario
-        setMessages((prev) => [...prev, { sender: "user", message: userMessage }]);
-        await insertToSupabase("user", userMessage, step, sessionId);
+        setMessages((prev) => {
+            const newMessages = [...prev, { sender: "user", message: userMessage }];
+            console.log('📨 Mensajes actualizados:', newMessages);
+            return newMessages;
+        });
+        
+        try {
+            await insertToSupabase("user", userMessage, step, sessionId);
+            console.log('✅ Mensaje guardado en Supabase');
+        } catch (error) {
+            console.error('❌ Error guardando en Supabase:', error);
+        }
+        
         setInput("");
+        console.log('🧹 Input limpiado');
 
         const nextStep = step + 1;
+        console.log('📈 Siguiente paso:', nextStep);
 
         if (botFlow[nextStep]) {
+            console.log('🤖 Hay respuesta del bot, configurando typing...');
             setIsTyping(true);
             setTimeout(async () => {
                 const botMsg = botFlow[nextStep];
-                setMessages((prev) => [...prev, { sender: "bot", message: botMsg }]);
-                await insertToSupabase("bot", botMsg, nextStep, sessionId);
+                console.log('🤖 Mensaje del bot:', botMsg);
+                
+                setMessages((prev) => {
+                    const newMessages = [...prev, { sender: "bot", message: botMsg }];
+                    console.log('📨 Mensajes actualizados con bot:', newMessages);
+                    return newMessages;
+                });
+                
+                try {
+                    await insertToSupabase("bot", botMsg, nextStep, sessionId);
+                    console.log('✅ Respuesta del bot guardada en Supabase');
+                } catch (error) {
+                    console.error('❌ Error guardando respuesta del bot:', error);
+                }
+                
                 setStep(nextStep);
                 setIsTyping(false);
+                console.log('✅ Conversación actualizada al paso:', nextStep);
             }, 1000);
+        } else {
+            console.log('🏁 No hay más pasos en el flujo');
         }
     };
 
