@@ -158,12 +158,13 @@ export default function SidebarAdmin() {
                                 router.push("/admin/dashboard");
                                 setIsOpen(false);
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                                isCollapsed ? 'justify-center' : ''
+                            }`}
                             title="Dashboard"
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                             </svg>
                             {!isCollapsed && <span>Dashboard</span>}
                         </button>
@@ -173,7 +174,9 @@ export default function SidebarAdmin() {
                                 router.push("/admin/chat");
                                 setIsOpen(false);
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                                isCollapsed ? 'justify-center' : ''
+                            }`}
                             title="Chat"
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,7 +190,9 @@ export default function SidebarAdmin() {
                                 router.push("/admin/quotes");
                                 setIsOpen(false);
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                                isCollapsed ? 'justify-center' : ''
+                            }`}
                             title="Cotizaciones"
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +206,9 @@ export default function SidebarAdmin() {
                     router.push("/admin/pricing-library");
                     setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                    isCollapsed ? 'justify-center' : ''
+                }`}
                 title="Biblioteca de Precios"
             >
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +221,9 @@ export default function SidebarAdmin() {
                     router.push("/admin/market-prices");
                     setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                    isCollapsed ? 'justify-center' : ''
+                }`}
                 title="Precios de Mercado"
             >
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +239,9 @@ export default function SidebarAdmin() {
                     router.push("/admin/quotes/create");
                     setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                    isCollapsed ? 'justify-center' : ''
+                }`}
                 title="Crear Cotización (incluye Servicios TI)"
             >
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,7 +255,9 @@ export default function SidebarAdmin() {
                                 router.push("/admin/settings");
                                 setIsOpen(false);
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-gray8 hover:text-blue5 hover:bg-gray8 rounded-xl transition-all duration-200 font-medium ${
+                                isCollapsed ? 'justify-center' : ''
+                            }`}
                             title="Configuración"
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +274,9 @@ export default function SidebarAdmin() {
                     <div className="border-t border-gray-200 pt-4">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 font-medium"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 font-medium ${
+                                isCollapsed ? 'justify-center' : ''
+                            }`}
                             title="Cerrar sesión"
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
