@@ -217,20 +217,28 @@ export default function AdminChat() {
             // Solo cargar contactos si hay un número de WhatsApp seleccionado
             if (!selectedWhatsappNumber) return;
 
+            console.log('🔍 Cargando contactos para WhatsApp:', selectedWhatsappNumber.number);
+
             const { data, error } = await supabase
                 .from("messages")
                 .select("*")
-                .or(`whatsapp_number.eq.${selectedWhatsappNumber.number},from_number.eq.${selectedWhatsappNumber.number}`)
+                .eq("whatsapp_number", selectedWhatsappNumber.number)
                 .order("timestamp", { ascending: false });
 
             if (error) throw error;
 
+            console.log('📨 Mensajes encontrados:', data.length);
+
             const contactMap = new Map<string, Contact>();
             
             data.forEach((msg) => {
-                // Determinar el número del contacto (el que no es el WhatsApp seleccionado)
-                const isIncoming = msg.whatsapp_number === selectedWhatsappNumber.number;
-                const contactPhone = isIncoming ? msg.from_number : msg.to_number;
+                // Determinar el número del contacto (el que no es el WhatsApp Business)
+                // Si from_number es el WhatsApp Business, entonces to_number es el contacto
+                // Si to_number es el WhatsApp Business, entonces from_number es el contacto
+                const isFromWhatsApp = msg.from_number === selectedWhatsappNumber.number;
+                const contactPhone = isFromWhatsApp ? msg.to_number : msg.from_number;
+                
+                console.log(`📱 Mensaje: ${msg.from_number} → ${msg.to_number}, Contacto: ${contactPhone}`);
                 
                 if (!contactMap.has(contactPhone)) {
                     contactMap.set(contactPhone, {
@@ -248,6 +256,7 @@ export default function AdminChat() {
                 }
             });
 
+            console.log('👥 Contactos encontrados:', Array.from(contactMap.keys()));
             setContacts(Array.from(contactMap.values()));
         } catch (error) {
             console.error("Error cargando contactos:", error);
@@ -258,15 +267,19 @@ export default function AdminChat() {
         try {
             if (!selectedWhatsappNumber) return;
 
+            console.log('💬 Cargando mensajes para contacto:', phone, 'en WhatsApp:', selectedWhatsappNumber.number);
+
             // Cargar mensajes que involucren tanto al contacto como al número de WhatsApp seleccionado
             const { data, error } = await supabase
                 .from("messages")
                 .select("*")
-                .or(`from_number.eq.${phone},to_number.eq.${phone}`)
                 .eq("whatsapp_number", selectedWhatsappNumber.number)
+                .or(`from_number.eq.${phone},to_number.eq.${phone}`)
                 .order("timestamp", { ascending: true });
 
             if (error) throw error;
+
+            console.log('📨 Mensajes cargados:', data.length);
 
             setMessages(data.map(msg => ({
                 id: msg.id,
