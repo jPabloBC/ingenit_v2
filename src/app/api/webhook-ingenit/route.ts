@@ -22,18 +22,25 @@ const supabase = createClient(
 // Función para verificar si es un nuevo contacto y enviar alerta
 async function checkAndNotifyNewContact(from: string, to: string) {
     try {
+        console.log(`🔍 Verificando si ${from} es un nuevo contacto para ${to}`);
+        
         // Verificar si ya existe un mensaje anterior de este contacto
         const { data: existingMessages, error: checkError } = await supabase
             .from("messages")
-            .select("id")
+            .select("id, timestamp")
             .eq("from_number", from)
             .eq("whatsapp_number", to)
             .order("timestamp", { ascending: false })
-            .limit(2);
+            .limit(5);
 
         if (checkError) {
             console.error("❌ Error verificando mensajes existentes:", checkError);
             return;
+        }
+
+        console.log(`📊 Mensajes encontrados para ${from}: ${existingMessages?.length || 0}`);
+        if (existingMessages && existingMessages.length > 0) {
+            console.log(`📅 Último mensaje: ${existingMessages[0].timestamp}`);
         }
 
         // Si solo hay 1 mensaje (el actual), es un nuevo contacto
@@ -42,6 +49,8 @@ async function checkAndNotifyNewContact(from: string, to: string) {
             
             // Enviar alerta por email
             await sendNewContactAlert(from, to);
+        } else {
+            console.log(`ℹ️ Contacto existente: ${from} (${existingMessages?.length || 0} mensajes)`);
         }
     } catch (error) {
         console.error("❌ Error en checkAndNotifyNewContact:", error);
