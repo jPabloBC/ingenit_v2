@@ -14,11 +14,18 @@ type WhatsAppErrorResponse = {
 };
 
 export async function POST(req: NextRequest) {
-    const { from, message, phoneId, businessAccountId } = await req.json();
+    const { from, message, text, to, phoneId, businessAccountId } = await req.json();
 
-    // Verificación de parámetros
-    if (!message) {
-        return NextResponse.json({ error: "Missing 'message' parameter" }, { status: 400 });
+    // Verificación de parámetros - aceptar tanto 'message' como 'text'
+    const messageContent = message || text;
+    const recipientNumber = to || messageContent;
+    
+    if (!messageContent) {
+        return NextResponse.json({ error: "Missing 'message' or 'text' parameter" }, { status: 400 });
+    }
+
+    if (!recipientNumber) {
+        return NextResponse.json({ error: "Missing recipient number ('to' parameter)" }, { status: 400 });
     }
 
     try {
@@ -28,6 +35,8 @@ export async function POST(req: NextRequest) {
         
         console.log(`📡 Enviando mensaje desde phone ID: ${phoneNumberId}`);
         console.log(`📡 Número de origen: ${from || 'default'}`);
+        console.log(`📡 Contenido del mensaje: ${messageContent}`);
+        console.log(`📡 Número destinatario: ${recipientNumber}`);
         
         // Solicitar a la API de WhatsApp
         const res = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
@@ -38,9 +47,9 @@ export async function POST(req: NextRequest) {
             },
             body: JSON.stringify({
                 messaging_product: "whatsapp",
-                to: message.startsWith("+") ? message : `+${message}`,
+                to: recipientNumber.startsWith("+") ? recipientNumber : `+${recipientNumber}`,
                 type: "text",
-                text: { body: message },
+                text: { body: messageContent },
             }),
         });
 
