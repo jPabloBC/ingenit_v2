@@ -95,6 +95,16 @@ export const generateProfessionalQuotePDF = async (quoteData: QuoteData): Promis
   console.log('Servicios:', quoteData.selected_services);
   console.log('Equipos:', quoteData.selected_equipment);
   
+  // Optimización: Configurar jsPDF para reducir tamaño
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+    compress: true, // Comprimir el PDF
+    putOnlyUsedFonts: true, // Solo incluir fuentes usadas
+    floatPrecision: 2 // Reducir precisión de números flotantes
+  });
+  
   if (quoteData.selected_services && quoteData.selected_services.length > 0) {
     quoteData.selected_services.forEach((service, index) => {
       console.log(`Servicio ${index + 1}:`, service);
@@ -113,7 +123,7 @@ export const generateProfessionalQuotePDF = async (quoteData: QuoteData): Promis
     });
   }
   
-  const pdf = new jsPDF('p', 'mm', 'a4');
+  // Usar la instancia de pdf ya creada con optimizaciones
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 20;
@@ -1119,7 +1129,16 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
     pdfBase64: pdfBase64
   };
   
-  const response = await fetch('/api/send-quote-email', {
+  // Verificar tamaño del PDF
+  const pdfSizeInBytes = Math.ceil((pdfBase64.length * 3) / 4);
+  const pdfSizeInMB = pdfSizeInBytes / (1024 * 1024);
+  
+  // Si el PDF es grande (> 3MB), usar el endpoint especial
+  const endpoint = pdfSizeInMB > 3 ? '/api/send-quote-email-large' : '/api/send-quote-email';
+  
+  console.log(`📧 Usando endpoint: ${endpoint} para PDF de ${pdfSizeInMB.toFixed(2)} MB`);
+  
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
