@@ -19,6 +19,61 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
+// Función para verificar si es un nuevo contacto y enviar alerta
+async function checkAndNotifyNewContact(from: string, to: string) {
+    try {
+        // Verificar si ya existe un mensaje anterior de este contacto
+        const { data: existingMessages, error: checkError } = await supabase
+            .from("messages")
+            .select("id")
+            .eq("from_number", from)
+            .eq("whatsapp_number", to)
+            .order("timestamp", { ascending: false })
+            .limit(2);
+
+        if (checkError) {
+            console.error("❌ Error verificando mensajes existentes:", checkError);
+            return;
+        }
+
+        // Si solo hay 1 mensaje (el actual), es un nuevo contacto
+        if (existingMessages && existingMessages.length === 1) {
+            console.log(`🆕 Nuevo contacto detectado: ${from}`);
+            
+            // Enviar alerta por email
+            await sendNewContactAlert(from, to);
+        }
+    } catch (error) {
+        console.error("❌ Error en checkAndNotifyNewContact:", error);
+    }
+}
+
+// Función para enviar alerta de nuevo contacto por email
+async function sendNewContactAlert(contactPhone: string, whatsappNumber: string) {
+    try {
+        // Enviar alerta usando el endpoint específico
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-whatsapp-alert`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contactPhone,
+                whatsappNumber
+            })
+        });
+
+        if (response.ok) {
+            console.log('✅ Alerta de nuevo contacto enviada por email');
+        } else {
+            console.error('❌ Error enviando alerta de nuevo contacto');
+        }
+
+    } catch (error) {
+        console.error('❌ Error en sendNewContactAlert:', error);
+    }
+}
+
     export async function POST(req: NextRequest) {
         console.log("🟡 INGENIT - endpoint alcanzado");
 
@@ -98,5 +153,13 @@ const supabase = createClient(
     }
 
     console.log(`✅ Mensaje guardado exitosamente en BD`);
+    
+    // Verificar si es un nuevo contacto y enviar alerta
+    try {
+        await checkAndNotifyNewContact(from, to);
+    } catch (error) {
+        console.warn("⚠️ Error verificando nuevo contacto:", error);
+    }
+    
     return NextResponse.json({ status: "ok" });
 }
