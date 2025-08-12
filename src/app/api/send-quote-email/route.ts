@@ -234,6 +234,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: `"Cotización IngenIT" <${process.env.EMAIL_USER || 'gerencia@ingenit.cl'}>`,
       to: recipientEmail,
+      cc: 'gerencia@ingenit.cl', // Copia interna para control
       subject: subject,
       text: textBody,
       html: htmlBody,

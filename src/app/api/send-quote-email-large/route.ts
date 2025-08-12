@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: `"ingenIT" <${process.env.SMTP_USER}>`,
       to: recipientEmail,
+      cc: 'gerencia@ingenit.cl', // Copia interna para control
       subject: subject,
       text: textBody,
       html: htmlBody,

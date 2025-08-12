@@ -1164,6 +1164,25 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
   
       if (result.success) {
       console.log('✅ Email enviado exitosamente:', result.messageId);
+      
+      // Enviar notificación interna
+      try {
+        await fetch('/api/send-internal-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            quoteData: quoteData,
+            recipientEmail: email,
+            messageId: result.messageId
+          })
+        });
+        console.log('✅ Notificación interna enviada');
+      } catch (internalError) {
+        console.warn('⚠️ Error enviando notificación interna:', internalError);
+      }
+      
       alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
     } else {
       throw new Error(result.error || 'Error desconocido en el servidor');
@@ -1236,6 +1255,25 @@ const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: s
   }
   
   console.log('✅ PDF enviado exitosamente en chunks');
+  
+  // Enviar notificación interna
+  try {
+    await fetch('/api/send-internal-notification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        quoteData: quoteData,
+        recipientEmail: email,
+        messageId: 'Enviado en chunks'
+      })
+    });
+    console.log('✅ Notificación interna enviada');
+  } catch (internalError) {
+    console.warn('⚠️ Error enviando notificación interna:', internalError);
+  }
+  
   alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
 };
 
