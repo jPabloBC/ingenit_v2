@@ -718,7 +718,9 @@ export default function AdminChat() {
                                             </div>
                                             
                                             {/* Menú desplegable para mensajes */}
-                                            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity menu-dropdown">
+                                            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity menu-dropdown ${
+                                                message.sender === "admin" ? "right-0" : "left-0"
+                                            }`}>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -732,7 +734,9 @@ export default function AdminChat() {
                                                 </button>
                                                 
                                                 {openMessageMenu === message.id && (
-                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                                    <div className={`absolute top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 ${
+                                                        message.sender === "admin" ? "right-0" : "left-0"
+                                                    }`}>
                                                         <button
                                                             onClick={() => handleShowMessageId(message.id)}
                                                             className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
