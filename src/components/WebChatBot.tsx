@@ -200,7 +200,9 @@ export default function WebChatBot() {
                                     </div>
                                     
                                     {/* Menú desplegable para mensajes */}
-                                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity message-menu-dropdown">
+                                    <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity message-menu-dropdown ${
+                                        m.sender === "user" ? "right-0" : "left-0"
+                                    }`}>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -214,7 +216,9 @@ export default function WebChatBot() {
                                         </button>
                                         
                                         {openMessageMenu === i && (
-                                            <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                            <div className={`absolute top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10 ${
+                                                m.sender === "user" ? "right-0" : "left-0"
+                                            }`}>
                                                 <button
                                                     onClick={() => handleShowMessageInfo(i)}
                                                     className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-xs"
