@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     
     console.log('📧 Enviando alerta de nuevo contacto WhatsApp:', contactPhone);
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,

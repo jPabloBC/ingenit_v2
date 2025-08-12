@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         if (to === "56975385487" || to === "56990206618") {
             console.log(`➡️ Reenviando a INGENIT desde número ${to}:`, JSON.stringify(body, null, 2));
             try {
-                const response = await fetch("https://ingenit.cl/api/webhook-ingenit", {
+                const response = await fetch("http://localhost:3000/api/webhook-ingenit", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
