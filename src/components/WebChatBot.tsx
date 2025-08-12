@@ -19,6 +19,7 @@ export default function WebChatBot() {
     const [sessionId, setSessionId] = useState("");
     const [showBot, setShowBot] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [openMessageMenu, setOpenMessageMenu] = useState<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -57,6 +58,21 @@ export default function WebChatBot() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    // Cerrar menús cuando se hace clic fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.message-menu-dropdown')) {
+                setOpenMessageMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     async function insertToSupabase(sender: "user" | "bot", message: string, step: number, sid: string) {
         await supabase!.from("web_chat").insert({ sender, message, step, session_id: sid });
@@ -104,6 +120,21 @@ export default function WebChatBot() {
         setMessages([{ sender: "bot", message: firstMessage }]);
         insertToSupabase("bot", firstMessage, 0, sid);
         setStep(0);
+    };
+
+    // Funciones para manejar menús desplegables de mensajes
+    const handleDeleteMessage = (index: number) => {
+        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+            setMessages(prev => prev.filter((_, i) => i !== index));
+            console.log('✅ Mensaje eliminado del chat');
+        }
+        setOpenMessageMenu(null);
+    };
+
+    const handleShowMessageInfo = (index: number) => {
+        const message = messages[index];
+        alert(`Mensaje #${index + 1}\nRemitente: ${message.sender}\nContenido: ${message.message}`);
+        setOpenMessageMenu(null);
     };
 
     if (!showBot) return null;
@@ -159,12 +190,52 @@ export default function WebChatBot() {
                                         <Bot className="w-4 h-4 text-gray-600" />
                                     )}
                                 </div>
-                                <div className={`px-4 py-2 rounded-2xl ${
-                                    m.sender === "user" 
-                                        ? "bg-blue6 text-white" 
-                                        : "bg-white text-gray-800 shadow-sm"
-                                }`}>
-                                    <p className="text-sm">{m.message}</p>
+                                <div className="relative group">
+                                    <div className={`px-4 py-2 rounded-2xl ${
+                                        m.sender === "user" 
+                                            ? "bg-blue6 text-white" 
+                                            : "bg-white text-gray-800 shadow-sm"
+                                    }`}>
+                                        <p className="text-sm">{m.message}</p>
+                                    </div>
+                                    
+                                    {/* Menú desplegable para mensajes */}
+                                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity message-menu-dropdown">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMessageMenu(openMessageMenu === i ? null : i);
+                                            }}
+                                            className="p-1 rounded-lg hover:bg-black hover:bg-opacity-20 transition-colors"
+                                        >
+                                            <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        {openMessageMenu === i && (
+                                            <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                                <button
+                                                    onClick={() => handleShowMessageInfo(i)}
+                                                    className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-xs"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Ver info
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteMessage(i)}
+                                                    className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-xs"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
