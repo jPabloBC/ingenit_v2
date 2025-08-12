@@ -1,0 +1,20 @@
+# API Keys para precios de mercado
+# Copiar este archivo como .env.local y llenar con tus keys
+
+# API de Monedas (Exchange Rate API)
+NEXT_PUBLIC_EXCHANGE_API_KEY=tu_api_key_aqui
+
+# API de Componentes Electrónicos (Digikey)
+NEXT_PUBLIC_DIGIKEY_CLIENT_ID=tu_client_id_aqui
+NEXT_PUBLIC_DIGIKEY_CLIENT_SECRET=tu_client_secret_aqui
+
+# API de Componentes Electrónicos (Mouser)
+NEXT_PUBLIC_MOUSER_API_KEY=tu_api_key_aqui
+
+# Configuración de Cache (en milisegundos)
+NEXT_PUBLIC_CACHE_DURATION=3600000
+
+# URLs de APIs
+NEXT_PUBLIC_EXCHANGE_API_URL=https://api.exchangerate-api.com/v4/latest/USD
+NEXT_PUBLIC_DIGIKEY_API_URL=https://api.digikey.com/v1
+NEXT_PUBLIC_MOUSER_API_URL=https://api.mouser.com/api/v1 
