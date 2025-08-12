@@ -718,9 +718,7 @@ export default function AdminChat() {
                                             </div>
                                             
                                             {/* Menú desplegable para mensajes */}
-                                            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity menu-dropdown ${
-                                                message.sender === "admin" ? "right-0" : "left-0"
-                                            }`}>
+                                            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity menu-dropdown">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
