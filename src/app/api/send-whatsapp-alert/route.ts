@@ -11,16 +11,17 @@ export async function POST(request: NextRequest) {
     console.log('📧 Enviando alerta de nuevo contacto WhatsApp:', contactPhone);
 
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      host: 'smtp.titan.email',
+      port: 587,
+      secure: false, // true para 465, false para otros puertos
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.EMAIL_USER || 'gerencia@ingenit.cl',
+        pass: process.env.EMAIL_PASS || 'an<s651eM813Per<'
       },
       tls: {
         rejectUnauthorized: false
       },
+      // Configuración de codificación para evitar caracteres extraños
       encoding: 'utf-8'
     });
 
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     `;
 
     const mailOptions = {
-      from: `"Sistema de Alertas - ingenIT" <${process.env.SMTP_USER}>`,
+      from: `"Sistema de Alertas - ingenIT" <${process.env.EMAIL_USER || 'gerencia@ingenit.cl'}>`,
       to: 'gerencia@ingenit.cl',
       subject: `🆕 Nuevo contacto WhatsApp: ${contactPhone}`,
       text: textBody,
