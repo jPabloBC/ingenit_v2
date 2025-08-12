@@ -312,7 +312,7 @@ export default function QuotesPage() {
           }
         }
         
-        alert(`✅ Correo enviado exitosamente a ${quote.client_email}\n\nEstado actualizado automáticamente a "Enviada"`);
+        alert(`✅ Correo enviado a ${quote.client_name} - ${quote.client_email}`);
         console.log('✅ Correo enviado:', result.messageId);
       } else {
         throw new Error(result.details || 'Error desconocido');

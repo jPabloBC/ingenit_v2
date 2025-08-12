@@ -1162,12 +1162,12 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
   
   const result = await response.json();
   
-  if (result.success) {
-    console.log('✅ Email enviado exitosamente:', result.messageId);
-    alert(`✅ Correo enviado exitosamente a ${email}\n\nID del mensaje: ${result.messageId}`);
-  } else {
-    throw new Error(result.error || 'Error desconocido en el servidor');
-  }
+      if (result.success) {
+      console.log('✅ Email enviado exitosamente:', result.messageId);
+      alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
+    } else {
+      throw new Error(result.error || 'Error desconocido en el servidor');
+    }
 };
 
 // Función para envío en chunks
@@ -1236,7 +1236,7 @@ const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: s
   }
   
   console.log('✅ PDF enviado exitosamente en chunks');
-  alert(`✅ Correo enviado exitosamente a ${email}\n\nPDF enviado en ${chunks.length} partes debido a su tamaño.`);
+  alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
 };
 
 export const previewProfessionalPDF = async (quoteData: QuoteData): Promise<void> => {
