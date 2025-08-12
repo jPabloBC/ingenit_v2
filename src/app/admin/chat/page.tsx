@@ -47,6 +47,8 @@ export default function AdminChat() {
     const [whatsappNumbers, setWhatsappNumbers] = useState<WhatsAppNumber[]>([]);
     const [selectedWhatsappNumber, setSelectedWhatsappNumber] = useState<WhatsAppNumber | null>(null);
     const [showWhatsappSelector, setShowWhatsappSelector] = useState(false);
+    const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
+    const [openContactMenu, setOpenContactMenu] = useState<string | null>(null);
 
     // Función helper para obtener colores corporativos
     const getCorporateColors = (whatsappNumber: WhatsAppNumber | null) => {
@@ -96,6 +98,22 @@ export default function AdminChat() {
         if (window.innerWidth < 768) {
             setShowContacts(true);
         }
+    }, []);
+
+    // Cerrar menús cuando se hace clic fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.menu-dropdown')) {
+                setOpenMessageMenu(null);
+                setOpenContactMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     // Recargar contactos cuando cambie el número de WhatsApp seleccionado
@@ -283,6 +301,57 @@ export default function AdminChat() {
         }
     };
 
+    // Funciones para manejar menús desplegables
+    const handleShowMessageId = (messageId: string) => {
+        alert(`ID del mensaje: ${messageId}`);
+        setOpenMessageMenu(null);
+    };
+
+    const handleDeleteMessage = async (messageId: string) => {
+        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+            try {
+                const { error } = await supabase
+                    .from("messages")
+                    .delete()
+                    .eq("id", messageId);
+
+                if (error) throw error;
+
+                // Recargar mensajes
+                if (selectedContact) {
+                    loadMessages(selectedContact.phone);
+                }
+                console.log('✅ Mensaje eliminado exitosamente');
+            } catch (error) {
+                console.error('❌ Error eliminando mensaje:', error);
+                alert('Error al eliminar el mensaje');
+            }
+        }
+        setOpenMessageMenu(null);
+    };
+
+    const handleDeleteContact = async (contactPhone: string) => {
+        if (confirm('¿Estás seguro de que quieres eliminar este contacto y todos sus mensajes?')) {
+            try {
+                const { error } = await supabase
+                    .from("messages")
+                    .delete()
+                    .eq("from_number", contactPhone)
+                    .eq("whatsapp_number", selectedWhatsappNumber?.number);
+
+                if (error) throw error;
+
+                // Recargar contactos
+                loadContacts();
+                console.log('✅ Contacto eliminado exitosamente');
+            } catch (error) {
+                console.error('❌ Error eliminando contacto:', error);
+                alert('Error al eliminar el contacto');
+            }
+        }
+        setOpenContactMenu(null);
+    };
+
     const sendMessage = async () => {
         if (!input.trim() || !selectedContact || !selectedWhatsappNumber || sending) return;
 
@@ -456,33 +525,66 @@ export default function AdminChat() {
                     {contacts.map((contact) => (
                         <div
                             key={contact.id}
-                            onClick={() => handleContactSelect(contact)}
-                            className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
+                            className={`p-4 border-b hover:bg-gray-50 ${
                                 selectedContact?.id === contact.id ? 'bg-blue-50' : ''
                             }`}
                         >
-                                            <div className="flex items-center">
-                    <div 
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white mr-3"
-                        style={{
-                            backgroundColor: selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff'
-                        }}
-                    >
-                        {contact.name.charAt(0).toUpperCase()}
-                    </div>
-                                <div className="flex-1">
-                                    <div className="font-medium text-gray-900">{contact.name}</div>
-                                    <div className="text-sm text-gray-500">{contact.phone}</div>
-                                    {contact.unreadCount > 0 && (
-                                        <div className="mt-1">
-                                            <span 
-                                                className="text-white text-xs px-2 py-1 rounded-full"
-                                                style={{
-                                                    backgroundColor: selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff'
-                                                }}
+                            <div className="flex items-center justify-between">
+                                <div 
+                                    className="flex items-center flex-1 cursor-pointer"
+                                    onClick={() => handleContactSelect(contact)}
+                                >
+                                    <div 
+                                        className="w-12 h-12 rounded-full flex items-center justify-center text-white mr-3"
+                                        style={{
+                                            backgroundColor: selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff'
+                                        }}
+                                    >
+                                        {contact.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-medium text-gray-900">{contact.name}</div>
+                                        <div className="text-sm text-gray-500">{contact.phone}</div>
+                                        {contact.unreadCount > 0 && (
+                                            <div className="mt-1">
+                                                <span 
+                                                    className="text-white text-xs px-2 py-1 rounded-full"
+                                                    style={{
+                                                        backgroundColor: selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff'
+                                                    }}
+                                                >
+                                                    {contact.unreadCount}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Menú desplegable para contactos */}
+                                <div className="relative menu-dropdown">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenContactMenu(openContactMenu === contact.id ? null : contact.id);
+                                        }}
+                                        className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    {openContactMenu === contact.id && (
+                                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                            <button
+                                                onClick={() => handleDeleteContact(contact.phone)}
+                                                className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
                                             >
-                                                {contact.unreadCount}
-                                            </span>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Eliminar contacto
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -548,30 +650,70 @@ export default function AdminChat() {
                                         key={message.id}
                                         className={`flex ${message.sender === "admin" ? "justify-end" : "justify-start"}`}
                                     >
-                                        <div
-                                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                                message.sender === "admin" ? "text-white" : "bg-white text-gray-800 shadow-sm"
-                                            }`}
-                                            style={{
-                                                backgroundColor: message.sender === "admin" 
-                                                    ? (selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff')
-                                                    : undefined
-                                            }}
-                                        >
-                                            <p className="text-sm">{message.content}</p>
-                                            <p 
-                                                className="text-xs mt-1"
+                                        <div className="relative group">
+                                            <div
+                                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                                    message.sender === "admin" ? "text-white" : "bg-white text-gray-800 shadow-sm"
+                                                }`}
                                                 style={{
-                                                    color: message.sender === "admin" 
-                                                        ? (selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).bg : '#ccd6e0')
-                                                        : '#6b7280'
+                                                    backgroundColor: message.sender === "admin" 
+                                                        ? (selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).primary : '#0078ff')
+                                                        : undefined
                                                 }}
                                             >
-                                                {new Date(message.timestamp).toLocaleTimeString("es-CL", {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
-                                            </p>
+                                                <p className="text-sm">{message.content}</p>
+                                                <p 
+                                                    className="text-xs mt-1"
+                                                    style={{
+                                                        color: message.sender === "admin" 
+                                                            ? (selectedWhatsappNumber ? getCorporateColors(selectedWhatsappNumber).bg : '#ccd6e0')
+                                                            : '#6b7280'
+                                                    }}
+                                                >
+                                                    {new Date(message.timestamp).toLocaleTimeString("es-CL", {
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })}
+                                                </p>
+                                            </div>
+                                            
+                                            {/* Menú desplegable para mensajes */}
+                                            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity menu-dropdown">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenMessageMenu(openMessageMenu === message.id ? null : message.id);
+                                                    }}
+                                                    className="p-1 rounded-lg hover:bg-black hover:bg-opacity-20 transition-colors"
+                                                >
+                                                    <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                {openMessageMenu === message.id && (
+                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                                        <button
+                                                            onClick={() => handleShowMessageId(message.id)}
+                                                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                            </svg>
+                                                            Mostrar ID
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteMessage(message.id)}
+                                                            className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                            Eliminar mensaje
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
