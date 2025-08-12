@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { getQuoteStatistics } from "@/lib/quoteIdGenerator";
-import { generateProfessionalQuotePDF } from "@/lib/pdfGeneratorProfessional";
+import { generateProfessionalQuotePDF, sendProfessionalPDFByEmail } from "@/lib/pdfGeneratorProfessional";
 import { 
   Search, 
   Plus, 
@@ -270,32 +270,15 @@ export default function QuotesPage() {
       console.log('equipment_total:', pdfData.equipment_total);
       console.log('Subtotal calculado:', pdfData.total_amount + pdfData.equipment_total);
       
-      // Generar el PDF
-      const pdf = await generateProfessionalQuotePDF(pdfData);
-      
-      // Convertir jsPDF a Base64
-      const pdfBase64 = pdf.output('datauristring').split(',')[1];
-      
       // Mostrar indicador de carga
       const loadingMessage = 'Enviando correo...';
       alert(loadingMessage);
       
-      // Enviar correo a través del backend
-      const response = await fetch('/api/send-quote-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          quoteData: {
-            ...pdfData,
-            pdfBase64: pdfBase64
-          },
-          recipientEmail: quote.client_email
-        })
-      });
+      // Usar la función mejorada que maneja chunks automáticamente
+      await sendProfessionalPDFByEmail(pdfData, quote.client_email);
       
-      const result = await response.json();
+      // Si llegamos aquí, el envío fue exitoso
+      const result = { success: true, messageId: 'enviado' };
       
       if (result.success) {
         // Cambiar automáticamente el estado a "sent" cuando el correo se envía exitosamente
