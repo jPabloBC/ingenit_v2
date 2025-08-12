@@ -346,16 +346,43 @@ export default function AdminChat() {
     const handleDeleteContact = async (contactPhone: string) => {
         if (confirm('¿Estás seguro de que quieres eliminar este contacto y todos sus mensajes?')) {
             try {
-                const { error } = await supabase
+                console.log('🗑️ Eliminando contacto:', contactPhone, 'de WhatsApp:', selectedWhatsappNumber?.number);
+                
+                // Eliminar mensajes entrantes (from_number = contactPhone)
+                const { error: errorIncoming } = await supabase
                     .from("messages")
                     .delete()
                     .eq("from_number", contactPhone)
                     .eq("whatsapp_number", selectedWhatsappNumber?.number);
 
-                if (error) throw error;
+                if (errorIncoming) {
+                    console.error('❌ Error eliminando mensajes entrantes:', errorIncoming);
+                    throw errorIncoming;
+                }
+
+                // Eliminar mensajes salientes (to_number = contactPhone)
+                const { error: errorOutgoing } = await supabase
+                    .from("messages")
+                    .delete()
+                    .eq("to_number", contactPhone)
+                    .eq("whatsapp_number", selectedWhatsappNumber?.number);
+
+                if (errorOutgoing) {
+                    console.error('❌ Error eliminando mensajes salientes:', errorOutgoing);
+                    throw errorOutgoing;
+                }
+
+                console.log('✅ Mensajes entrantes y salientes eliminados exitosamente');
 
                 // Recargar contactos
                 loadContacts();
+                
+                // Si el contacto eliminado es el seleccionado, limpiar la selección
+                if (selectedContact && selectedContact.phone === contactPhone) {
+                    setSelectedContact(null);
+                    setMessages([]);
+                }
+                
                 console.log('✅ Contacto eliminado exitosamente');
             } catch (error) {
                 console.error('❌ Error eliminando contacto:', error);
