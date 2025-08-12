@@ -321,7 +321,7 @@ export default function AdminChat() {
     };
 
     const handleDeleteMessage = async (messageId: string) => {
-        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+        if (confirm('⚠️ ADVERTENCIA: Esta acción es IRREVERSIBLE\n\n¿Estás seguro de que quieres eliminar este mensaje?\n\nEsta acción no se puede deshacer.')) {
             try {
                 const { error } = await supabase
                     .from("messages")
@@ -344,7 +344,7 @@ export default function AdminChat() {
     };
 
     const handleDeleteContact = async (contactPhone: string) => {
-        if (confirm('¿Estás seguro de que quieres eliminar este contacto y todos sus mensajes?')) {
+        if (confirm('⚠️ ADVERTENCIA: Esta acción es IRREVERSIBLE\n\n¿Estás seguro de que quieres eliminar TODOS los mensajes de este contacto?\n\nEsta acción no se puede deshacer.')) {
             try {
                 console.log('🗑️ Eliminando contacto:', contactPhone, 'de WhatsApp:', selectedWhatsappNumber?.number);
                 
@@ -623,7 +623,7 @@ export default function AdminChat() {
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                                Eliminar contacto
+                                                Eliminar mensajes
                                             </button>
                                         </div>
                                     )}
