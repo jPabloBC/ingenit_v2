@@ -1152,8 +1152,8 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
   if (!response.ok) {
     if (response.status === 413) {
       console.log('📦 Error 413 detectado, redirigiendo a envío en chunks...');
-      // Si falla por tamaño, intentar con chunks
-      await sendPDFInChunks(quoteData, pdfBase64, email);
+      // Si falla por tamaño, intentar con chunks (sin mostrar alert adicional)
+      await sendPDFInChunks(quoteData, pdfBase64, email, false);
       return;
     }
     const errorText = await response.text();
@@ -1190,7 +1190,7 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
 };
 
 // Función para envío en chunks
-const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: string): Promise<void> => {
+const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: string, showAlert: boolean = true): Promise<void> => {
   const chunkSize = 3 * 1024 * 1024; // 3MB por chunk
   const chunks = [];
   
@@ -1274,7 +1274,10 @@ const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: s
     console.warn('⚠️ Error enviando notificación interna:', internalError);
   }
   
-  alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
+  // Solo mostrar alert si showAlert es true
+  if (showAlert) {
+    alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
+  }
 };
 
 export const previewProfessionalPDF = async (quoteData: QuoteData): Promise<void> => {
