@@ -42,10 +42,9 @@ html {
   background: #a8a8a8;
 }
 
-/* Focus styles for better accessibility */
+/* Focus styles - removed outline, keeping only hover effects */
 *:focus {
-  outline: 2px solid #005abf;
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* Button hover effects */
@@ -125,11 +124,11 @@ html {
   color: white;
 }
 
-/* Improved focus for form elements */
+/* Improved focus for form elements - subtle styling */
 input:focus,
 textarea:focus,
 select:focus {
-  @apply ring-2 ring-blue6 ring-opacity-50 border-blue6;
+  @apply ring-1 ring-blue6 ring-opacity-30 border-blue6;
 }
 
 /* Smooth transitions for all interactive elements */
