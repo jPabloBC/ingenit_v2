@@ -39,3 +39,33 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Protección de archivos críticos - NO ELIMINAR ESTOS ARCHIVOS
+# Los siguientes archivos son críticos para el funcionamiento del sistema
+# Si se eliminan, el sistema dejará de funcionar correctamente
+# 
+# Archivos críticos del admin:
+# - src/app/admin/chat/page.tsx
+# - src/app/admin/quotes/page.tsx  
+# - src/app/admin/dashboard/page.tsx
+# - src/app/admin/login/page.tsx
+#
+# Componentes críticos:
+# - src/components/CalculationModal.tsx
+# - src/components/QuoteEditModal.tsx
+# - src/components/WebChatBot.tsx
+# - src/components/SidebarAdmin.tsx
+#
+# Librerías críticas:
+# - src/lib/serviceCalculations.ts
+# - src/lib/pricingService.ts
+# - src/lib/pdfGeneratorProfessional.ts
+# - src/lib/equipmentPricing.ts
+# - src/lib/marketPricingService.ts
+# - src/lib/quoteIdGenerator.ts
+# - src/lib/granularTIServices.ts
+# - src/lib/localPricingService.ts
+# - src/lib/currencyData.ts
+# - src/lib/completeGeoData.ts
+# - src/lib/geoData.ts
+# - src/lib/supabaseClient.ts
