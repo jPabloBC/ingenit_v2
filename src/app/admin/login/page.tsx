@@ -17,6 +17,29 @@ export default function AdminLogin() {
   const [resetSuccess, setResetSuccess] = useState("");
   const router = useRouter();
 
+  const handleLocalStorageLogin = async () => {
+    // Fallback a localStorage para desarrollo/producción sin Supabase
+    if (email === "gerencia@ingenit.cl" && password === "admin123") {
+      const token = "demo-token-" + Date.now();
+      const userData = { 
+        email, 
+        role: "dev",
+        name: "Desarrollador"
+      };
+      
+      localStorage.setItem("adminToken", token);
+      localStorage.setItem("adminUser", JSON.stringify(userData));
+      
+      setSuccess("¡Login exitoso! (Modo desarrollo) Redirigiendo...");
+      
+      setTimeout(() => {
+        router.push("/admin/dashboard");
+      }, 1000);
+    } else {
+      setError("Credenciales inválidas. Usa: gerencia@ingenit.cl / admin123");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -25,58 +48,94 @@ export default function AdminLogin() {
 
     try {
       if (isSupabaseConfigured()) {
-        // Iniciar sesión con Supabase
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        try {
+          // Iniciar sesión con Supabase
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-        if (error) {
-          setLoginAttempts(prev => prev + 1);
-          
-          // Manejar errores específicos
-          if (error.message.includes("Invalid login credentials")) {
-            setError("Credenciales inválidas. Verifica tu email y contraseña.");
-          } else if (error.message.includes("Email not confirmed")) {
-            setError("Email no confirmado. Revisa tu bandeja de entrada.");
-          } else {
-            setError(`Error de autenticación: ${error.message}`);
+          if (error) {
+            setLoginAttempts(prev => prev + 1);
+            
+            // Manejar errores específicos
+            if (error.message.includes("Invalid login credentials")) {
+              setError("Credenciales inválidas. Verifica tu email y contraseña.");
+            } else if (error.message.includes("Email not confirmed")) {
+              setError("Email no confirmado. Revisa tu bandeja de entrada.");
+            } else if (error.message.includes("Failed to fetch") || error.message.includes("ERR_NAME_NOT_RESOLVED")) {
+              setError("Error de conexión con Supabase. Usando modo de desarrollo...");
+              // Fallback a localStorage
+              await handleLocalStorageLogin();
+              return;
+            } else {
+              setError(`Error de autenticación: ${error.message}`);
+            }
+            return;
           }
-          return;
-        }
 
-        if (data.user) {
-          // Verificar que el usuario tenga rol de admin o dev
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
+          if (data.user) {
+            // Verificar que el usuario tenga rol de admin o dev
+            const { data: profile, error: profileError } = await supabase
+              .from('rt_profiles')
+              .select('role, allowed_screens')
+              .eq('id', data.user.id)
+              .single();
 
-          if (profileError) {
-            // Si no existe la tabla profiles, permitir acceso temporal
-            if (profileError.code === 'PGRST116') {
-              setSuccess("¡Login exitoso! Redirigiendo...");
-              setTimeout(() => {
-                router.push("/admin/dashboard");
-              }, 1000);
+            if (profileError) {
+              // Si no existe la tabla profiles, permitir acceso temporal
+              if (profileError.code === 'PGRST116') {
+                setSuccess("¡Login exitoso! Redirigiendo...");
+                setTimeout(() => {
+                  router.push("/admin/dashboard");
+                }, 1000);
+                return;
+              }
+              await supabase.auth.signOut();
+              setError("Error verificando permisos de administrador");
               return;
             }
-            await supabase.auth.signOut();
-            setError("Error verificando permisos de administrador");
-            return;
-          }
 
-          if (!profile || !['admin', 'dev'].includes(profile.role)) {
-            await supabase.auth.signOut();
-            setError("No tienes permisos de administrador o desarrollador");
-            return;
-          }
+            if (!profile || !['admin', 'dev'].includes(profile.role)) {
+              if (profile && profile.role === 'user') {
+                // Buscar la primera pantalla permitida
+                const allowed = Array.isArray(profile.allowed_screens) ? profile.allowed_screens : [];
+                if (allowed.length === 0) {
+                  await supabase.auth.signOut();
+                  setError("No tienes pantallas autorizadas. Tu rol es: user");
+                  return;
+                }
+                // Consultar el screen_id de la primera pantalla permitida
+                const { data: screen, error: screenError } = await supabase
+                  .from('rt_screens')
+                  .select('screen_id')
+                  .eq('id', allowed[0])
+                  .single();
+                if (screenError || !screen) {
+                  await supabase.auth.signOut();
+                  setError("No se pudo obtener la pantalla autorizada. Tu rol es: user");
+                  return;
+                }
+                setSuccess("¡Login exitoso! Redirigiendo...");
+                setTimeout(() => {
+                  router.push(`/admin/${screen.screen_id}`);
+                }, 1000);
+                return;
+              } else {
+                await supabase.auth.signOut();
+                setError(`No tienes permisos. Tu rol es: ${profile ? profile.role : 'desconocido'}`);
+                return;
+              }
+            }
 
-          setSuccess("¡Login exitoso! Redirigiendo...");
-          setTimeout(() => {
-            router.push("/admin/dashboard");
-          }, 1000);
+            setSuccess("¡Login exitoso! Redirigiendo...");
+            setTimeout(() => {
+              router.push("/admin/dashboard");
+            }, 1000);
+          }
+        } catch (error) {
+          console.error("Error signing in:", error);
+          setError("Error al iniciar sesión");
         }
       } else {
         // Fallback a localStorage
@@ -101,9 +160,6 @@ export default function AdminLogin() {
           setError("Credenciales inválidas. Usa: gerencia@ingenit.cl / admin123");
         }
       }
-    } catch (error) {
-      console.error("Error signing in:", error);
-      setError("Error al iniciar sesión");
     } finally {
       setIsLoading(false);
     }

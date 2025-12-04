@@ -539,7 +539,7 @@ export default function PricingLibraryPage() {
             
             if (user) {
                 const { data: profile } = await supabase
-                    .from('profiles')
+                    .from('rt_profiles')
                     .select('role')
                     .eq('id', user.id)
                     .single();
@@ -571,7 +571,7 @@ export default function PricingLibraryPage() {
             // Probar una consulta simple
             console.log("Probando consulta simple...");
             const { data, error } = await supabase
-                .from("pricing_library")
+                .from("rt_pricing_library")
                 .select("count")
                 .limit(1);
             
@@ -607,7 +607,7 @@ export default function PricingLibraryPage() {
             // Intentar consulta simple primero
             console.log("Probando consulta simple...");
             const { data: testData, error: testError } = await supabase
-                .from("pricing_library")
+                .from("rt_pricing_library")
                 .select("count")
                 .limit(1);
             
@@ -621,7 +621,7 @@ export default function PricingLibraryPage() {
             // Consulta principal
             console.log("Realizando consulta principal...");
             const { data, error } = await supabase
-                .from("pricing_library")
+                .from("rt_pricing_library")
                 .select("*")
                 .order("created_at", { ascending: false });
 
@@ -657,7 +657,7 @@ export default function PricingLibraryPage() {
             if (editingItem) {
                 // Actualizar item existente
                 const { error } = await supabase
-                    .from("pricing_library")
+                    .from("rt_pricing_library")
                     .update({
                         ...item,
                         updated_at: new Date().toISOString()
@@ -668,7 +668,7 @@ export default function PricingLibraryPage() {
             } else {
                 // Crear nuevo item
                 const { error } = await supabase
-                    .from("pricing_library")
+                    .from("rt_pricing_library")
                     .insert({
                         ...item,
                         created_at: new Date().toISOString(),
@@ -702,7 +702,7 @@ export default function PricingLibraryPage() {
 
         try {
             const { error } = await supabase
-                .from("pricing_library")
+                .from("rt_pricing_library")
                 .delete()
                 .eq("id", id);
 

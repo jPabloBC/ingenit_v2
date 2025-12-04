@@ -46,7 +46,7 @@ function ProductCard({
 
         <section className="pt-32 pb-20 bg-gradient-to-br from-blue-50 via-white to-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-4xl mx-auto">
+                <div className="text-center max-w-7xl mx-auto">
                     <h1 className="text-4xl md:text-6xl font-title text-gray-900 mb-6 leading-tight">
                         Nuestros <span className="text-blue6">Productos</span>
                     </h1>
@@ -108,6 +108,39 @@ function ProductCard({
                                 "Escalabilidad garantizada"
                             ]}
                         />
+                    </div>
+
+                    <div className="mt-16 flex flex-col items-center">
+                        <div className="w-full max-w-7xl bg-white rounded-2xl shadow-xl border border-blue6/20 flex flex-col md:flex-row items-center p-6 md:p-8 gap-6 md:gap-10 hover:shadow-2xl transition-all">
+                            <div className="flex-shrink-0 w-full md:w-64 flex justify-center">
+                                <img
+                                    src="/assets/logo_ingenIT.png"
+                                    alt="HL - Gestor Hotelero"
+                                    className="rounded-xl object-contain w-48 h-48 md:w-64 md:h-64 bg-gray-50 border border-gray-100 shadow-sm"
+                                />
+                            </div>
+                            <div className="flex-1 text-center md:text-left">
+                                <a
+                                    href="https://hl.ingenit.cl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block mb-2 text-gray9 font-normal text-4xl hover:underline"
+                                >
+                                    Gestor Hotelero
+                                </a>
+                                <p className="text-gray-700 mb-3 text-base md:text-lg">
+                                    Gestiona tu hotel de forma más fácil y eficiente con una plataforma intuitiva y segura, adaptable a cualquier tipo de hospedaje.
+                                </p>
+                                <a
+                                    href="https://hl.ingenit.cl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block mt-2 px-6 py-2 bg-blue6 text-white rounded-sm font-normal shadow hover:bg-blue4 transition"
+                                >
+                                    Ver producto
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

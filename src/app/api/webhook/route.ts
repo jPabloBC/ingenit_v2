@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     return new Response("Forbidden", { status: 403 });
-    }
+}
 
     export async function POST(req: NextRequest) {
         const body = await req.json();
@@ -34,17 +34,25 @@ export async function GET(req: NextRequest) {
         }
 
         if (to === "56937570007") {
-            // Para producción, este número debe ir a mt.ingenit.cl
+            // Para MT - funciona tanto en desarrollo como en producción
+            console.log(`➡️ Reenviando a MT desde número ${to}:`, JSON.stringify(body, null, 2));
             try {
-                const response = await fetch("https://mt.ingenit.cl/api/webhook", {
+                // Usar URL base configurada o detectar automáticamente
+                const mtBaseUrl = process.env.MT_BASE_URL || 
+                                 (process.env.NODE_ENV === 'production' ? 'https://mt.ingenit.cl' : 'http://localhost:3001');
+                
+                console.log(`🌐 Usando URL base MT: ${mtBaseUrl}`);
+                
+                const response = await fetch(`${mtBaseUrl}/api/webhook`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
                 });
-                console.log(`✅ Reenviado a mt.ingenit.cl - Status: ${response.status}`);
+                
+                console.log(`✅ Reenviado a MT - Status: ${response.status}`);
                 return NextResponse.json({ status: "forwarded to mt.ingenit" });
             } catch (error) {
-                console.error(`❌ Error reenviando a mt.ingenit.cl:`, error);
+                console.error(`❌ Error reenviando a MT:`, error);
                 return NextResponse.json({ status: "error forwarding to mt.ingenit" }, { status: 500 });
             }
         }
@@ -54,11 +62,18 @@ export async function GET(req: NextRequest) {
         if (to === "56975385487" || to === "56990206618") {
             console.log(`➡️ Reenviando a INGENIT desde número ${to}:`, JSON.stringify(body, null, 2));
             try {
-                const response = await fetch("http://localhost:3000/api/webhook-ingenit", {
+                // Usar URL base configurada o detectar automáticamente
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                               (process.env.NODE_ENV === 'production' ? 'https://ingenit.cl' : 'http://localhost:3000');
+                
+                console.log(`🌐 Usando URL base: ${baseUrl}`);
+                
+                const response = await fetch(`${baseUrl}/api/webhook-ingenit`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
                 });
+                
                 console.log(`✅ Reenviado a INGENIT - Status: ${response.status}`);
                 return NextResponse.json({ status: "forwarded to ingenit" });
             } catch (error) {

@@ -47,9 +47,9 @@ export default function PrivacyPolicyPage() {
             Si tienes alguna pregunta o inquietud sobre esta política, no dudes en contactarnos a través del correo <a href="mailto:gerencia@ingenit.cl" className="text-blue4 underline">gerencia@ingenit.cl</a>.
         </p>
 
-        <Footer />
-
         </main>
+        
+        <Footer />
         </>
     );
 }

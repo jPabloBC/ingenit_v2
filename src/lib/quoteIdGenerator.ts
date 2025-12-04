@@ -12,7 +12,7 @@ export async function generateQuoteId(): Promise<string> {
         
         // Buscar el último número de cotización global (sin importar la fecha)
         const { data: lastQuote, error } = await supabase
-            .from('quotes')
+            .from('rt_quotes')
             .select('quote_number')
             .not('quote_number', 'is', null)
             .order('quote_number', { ascending: false })
@@ -93,7 +93,7 @@ export async function getQuoteStatistics(): Promise<{total: number, lastNumber: 
     try {
         // Obtener total de cotizaciones con número
         const { count: total, error: totalError } = await supabase
-            .from('quotes')
+            .from('rt_quotes')
             .select('*', { count: 'exact', head: true })
             .not('quote_number', 'is', null);
 
@@ -101,7 +101,7 @@ export async function getQuoteStatistics(): Promise<{total: number, lastNumber: 
 
         // Obtener el último número de cotización
         const { data: lastQuote, error: lastError } = await supabase
-            .from('quotes')
+            .from('rt_quotes')
             .select('quote_number')
             .not('quote_number', 'is', null)
             .order('quote_number', { ascending: false })
@@ -120,7 +120,7 @@ export async function getQuoteStatistics(): Promise<{total: number, lastNumber: 
         endOfTodayLocal.setHours(23, 59, 59, 999);
 
         const { count: todayCount, error: todayError } = await supabase
-            .from('quotes')
+            .from('rt_quotes')
             .select('*', { count: 'exact', head: true })
             .gte('created_at', startOfTodayLocal.toISOString())
             .lte('created_at', endOfTodayLocal.toISOString());

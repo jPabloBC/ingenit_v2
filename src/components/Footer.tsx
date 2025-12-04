@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -15,10 +15,11 @@ export default function Footer() {
             <div className="mb-6">
               <Image
                 src="/assets/logo_transparent_ingenIT_white.png"
-                alt="Logo IngenIT"
-                width={160}
-                height={40}
+                alt="IngenIT — Desarrollo de Aplicaciones, Web Apps y Automatización"
+                width={120}
+                height={30}
                 className="mb-4"
+                style={{ width: 'auto', height: 'auto' }}
               />
               <p className="text-gray-300 text-sm leading-relaxed max-w-md">
                 Especialistas en integración y automatización de procesos críticos. 
@@ -40,8 +41,30 @@ export default function Footer() {
               <div className="flex items-center space-x-3 text-gray-300">
                 <Phone className="w-4 h-4 text-blue6" />
                 <a 
-                  href="tel:+56975385487" 
+                  href="tel:+56990206618" 
                   className="text-sm hover:text-blue6 transition-colors duration-200"
+                >
+                  +56 9 9020 6618
+                </a>
+              </div>
+              <div className="flex items-center space-x-3 text-gray-300">
+                <MessageCircle className="w-4 h-4 text-green-500" />
+                <a 
+                  href="https://wa.me/56990206618" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm hover:text-green-400 transition-colors duration-200"
+                >
+                  +56 9 9020 6618
+                </a>
+              </div>
+              <div className="flex items-center space-x-3 text-gray-300">
+                <MessageCircle className="w-4 h-4 text-green-500" />
+                <a 
+                  href="https://wa.me/56975385487" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm hover:text-green-400 transition-colors duration-200"
                 >
                   +56 9 7538 5487
                 </a>
@@ -128,6 +151,22 @@ export default function Footer() {
                   Política de Privacidad
                 </Link>
               </li>
+              <li>
+                <Link 
+                  href="/terms-of-service" 
+                  className="text-gray-300 hover:text-blue6 transition-colors duration-200 text-sm"
+                >
+                  Condiciones del Servicio
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/data-deletion" 
+                  className="text-gray-300 hover:text-blue6 transition-colors duration-200 text-sm"
+                >
+                  Eliminación de Datos
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -149,10 +188,17 @@ export default function Footer() {
               </Link>
               <span>•</span>
               <Link 
-                href="/contact" 
+                href="/terms-of-service" 
                 className="hover:text-blue6 transition-colors duration-200"
               >
-                Contacto
+                Condiciones del Servicio
+              </Link>
+              <span>•</span>
+              <Link 
+                href="/data-deletion" 
+                className="hover:text-blue6 transition-colors duration-200"
+              >
+                Eliminación de Datos
               </Link>
             </div>
           </div>

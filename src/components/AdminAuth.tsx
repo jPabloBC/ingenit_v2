@@ -66,7 +66,7 @@ export default function AdminAuth({ children }: AdminAuthProps) {
           
           // Verificar que el usuario tenga rol de admin o dev
           const { data: profile, error: profileError } = await supabase
-            .from('profiles')
+            .from('rt_profiles')
             .select('role')
             .eq('id', session.user.id)
             .single();

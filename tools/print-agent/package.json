@@ -1,0 +1,12 @@
+{
+  "name": "ingenit-print-agent",
+  "version": "0.1.0",
+  "description": "Local print agent for Ingenit (downloads queued PDFs and prints via lp)",
+  "main": "agent.js",
+  "scripts": {
+    "start": "node agent.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

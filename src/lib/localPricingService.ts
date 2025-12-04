@@ -304,7 +304,7 @@ export const updatePricingFromLocal = async (): Promise<void> => {
         // Actualizar precios en la base de datos
         for (const price of localPrices) {
             const { error } = await supabase
-                .from('pricing_library')
+                .from('rt_pricing_library')
                 .update({
                     base_price: price.price,
                     unit_prices: {

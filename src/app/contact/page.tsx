@@ -44,7 +44,7 @@ export default function ContactoPage() {
 
                             const { supabase } = await import("@/lib/supabaseClient");
 
-                            const { error } = await supabase!.from("contacts").insert({
+                            const { error } = await supabase!.from("rt_contacts").insert({
                                 full_name: fullName,
                                 email,
                                 phone,
@@ -114,7 +114,7 @@ export default function ContactoPage() {
                         
                         <button
                         type="submit"
-                        className="w-full bg-blue6 text-white px-8 py-4 rounded-xl hover:bg-blue7 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                        className="w-full bg-blue6 text-white px-8 py-4 rounded-xl hover:bg-blue4 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                         >
                         Enviar mensaje
                         </button>

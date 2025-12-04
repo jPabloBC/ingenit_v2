@@ -1224,7 +1224,7 @@ export default function CreateQuotePage() {
     // Fallback: si no existe tabla `clients`, buscar en `quotes` y armar clientes únicos
     const searchClientsFromQuotes = async (term: string) => {
         const { data, error } = await supabase
-            .from("quotes")
+            .from("rt_quotes")
             .select("client_rut, client_name, client_email, client_phone, client_phone_country, client_address, client_region, client_commune, client_country")
             .or(`client_rut.ilike.%${term}%,client_name.ilike.%${term}%,client_email.ilike.%${term}%`)
             .limit(50);
@@ -1260,7 +1260,7 @@ export default function CreateQuotePage() {
 
         try {
             const { data, error } = await supabase
-                .from("clients")
+                .from("rt_clients")
                 .select("*")
                 .or(`rut.ilike.%${term}%,name.ilike.%${term}%,email.ilike.%${term}%`)
                 .limit(10);
@@ -1416,7 +1416,7 @@ export default function CreateQuotePage() {
         (async () => {
         try {
             const { data, error } = await supabase
-            .from("quotes")
+            .from("rt_quotes")
             .select("*")
             .eq("id", quoteId)
             .single();
@@ -1628,7 +1628,7 @@ export default function CreateQuotePage() {
             (async () => {
                 try {
                     const { data: quoteData, error } = await supabase
-                        .from("quotes")
+                        .from("rt_quotes")
                         .select("*")
                         .eq("id", quoteId)
                         .single();
@@ -2330,7 +2330,7 @@ export default function CreateQuotePage() {
                 console.log('🔄 ACTUALIZANDO COTIZACIÓN EXISTENTE:', quoteId);
                 // Actualizar cotización existente
                 const { data, error } = await supabase
-                    .from("quotes")
+                    .from("rt_quotes")
                     .update(datosAGuardar)
                     .eq('id', quoteId)
                     .select();
@@ -2351,7 +2351,7 @@ export default function CreateQuotePage() {
                 console.log('🆕 CREANDO NUEVA COTIZACIÓN');
                 // Crear nueva cotización
             const { data, error } = await supabase
-                .from("quotes")
+                .from("rt_quotes")
                 .insert(datosAGuardar)
                 .select();
 

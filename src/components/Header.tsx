@@ -24,8 +24,8 @@ export default function Header() {
       <header 
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
           isScrolled 
-            ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100" 
-            : "bg-white"
+            ? "bg-blue1 backdrop-blur-md shadow-lg border-b border-gray-100" 
+            : "bg-blue3"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,12 +33,14 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 group focus:outline-none">
               <Image
-                src="/assets/logo_transparent_ingenIT.png"
-                alt="Logo IngenIT"
-                width={160}
-                height={45}
+                src="/assets/logo_transparent_ingenIT_w.png"
+                alt="IngenIT — Desarrollo de Aplicaciones, Web Apps y Automatización"
+                width={140}
+                height={39}
                 priority
-                className="transition-transform duration-300 group-hover:scale-105"
+                className="transition-transform duration-300 group-hover:scale-105 w-28 sm:w-32 md:w-36 lg:w-40 h-auto"
+                sizes="(max-width: 640px) 7rem, (max-width: 768px) 8rem, (max-width: 1024px) 9rem, 10rem"
+                style={{ height: 'auto' }}
               />
             </Link>
 
@@ -46,28 +48,28 @@ export default function Header() {
             <nav className="hidden lg:flex items-center space-x-8">
               <Link 
                 href="/" 
-                className="text-gray-700 hover:text-blue6 font-medium transition-colors duration-200 relative group focus:outline-none"
+                className="text-gray10 hover:text-blue10 font-medium transition-colors duration-300 relative group focus:outline-none"
               >
                 Inicio
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue6 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue10 transition-all duration-300 group-hover:w-full"></span>
               </Link>
               <Link 
                 href="/services" 
-                className="text-gray-700 hover:text-blue6 font-medium transition-colors duration-200 relative group focus:outline-none"
+                className="text-gray10 hover:text-blue10 font-medium transition-colors duration-300 relative group focus:outline-none"
               >
                 Servicios
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue6 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue10 transition-all duration-300 group-hover:w-full"></span>
               </Link>
               <Link 
                 href="/products" 
-                className="text-gray-700 hover:text-blue6 font-medium transition-colors duration-200 relative group focus:outline-none"
+                className="text-gray10 hover:text-blue10 font-medium transition-colors duration-300 relative group focus:outline-none"
               >
                 Productos
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue6 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue10 transition-all duration-300 group-hover:w-full"></span>
               </Link>
               <Link 
                 href="/contact" 
-                className="bg-blue6 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue7 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none"
+                className="bg-blue8 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue6 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none"
               >
                 Contacto
               </Link>
@@ -110,9 +112,12 @@ export default function Header() {
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <Image
                   src="/assets/logo_transparent_ingenIT.png"
-                  alt="Logo IngenIT"
+                  alt="IngenIT — Desarrollo de Aplicaciones, Web Apps y Automatización"
                   width={120}
                   height={35}
+                  className="w-24 sm:w-28 md:w-32 lg:w-36 h-auto"
+                  sizes="(max-width: 640px) 6rem, (max-width: 768px) 7rem, (max-width: 1024px) 8rem, 9rem"
+                  style={{ height: 'auto' }}
                 />
                 <button
                   onClick={closeMenu}

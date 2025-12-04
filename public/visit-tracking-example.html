@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo de Tracking de Visitas - IngenIT</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .code-block { background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 10px 0; overflow-x: auto; }
+        .project-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a87; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Tracking de Visitas - IngenIT</h1>
+    
+    <h2>🎯 Objetivo</h2>
+    <p>Registrar visitas a cada proyecto de IngenIT para mostrar estadísticas en el dashboard administrativo.</p>
+    
+    <h2>📊 Proyectos Configurados</h2>
+    
+    <div class="project-card">
+        <h3>HL - Health & Lifestyle</h3>
+        <p><strong>URL:</strong> hl.ingenit.cl</p>
+        <p><strong>Código:</strong> hl</p>
+        <button onclick="trackVisit('hl', 'https://hl.ingenit.cl')">Simular Visita HL</button>
+    </div>
+    
+    <div class="project-card">
+        <h3>MT - Mantenimiento TI</h3>
+        <p><strong>URL:</strong> mt.ingenit.cl</p>
+        <p><strong>Código:</strong> mt</p>
+        <button onclick="trackVisit('mt', 'https://mt.ingenit.cl')">Simular Visita MT</button>
+    </div>
+    
+    <div class="project-card">
+        <h3>WS - Web Services</h3>
+        <p><strong>URL:</strong> ws.ingenit.cl</p>
+        <p><strong>Código:</strong> ws</p>
+        <button onclick="trackVisit('ws', 'https://ws.ingenit.cl')">Simular Visita WS</button>
+    </div>
+    
+    <div class="project-card">
+        <h3>Main - IngenIT Principal</h3>
+        <p><strong>URL:</strong> ingenit.cl</p>
+        <p><strong>Código:</strong> main</p>
+        <button onclick="trackVisit('main', 'https://ingenit.cl')">Simular Visita Main</button>
+    </div>
+
+    <div id="result"></div>
+    
+    <h2>🛠️ Implementación en Proyectos</h2>
+    
+    <h3>1. JavaScript/HTML (para sitios estáticos)</h3>
+    <div class="code-block">
+&lt;script&gt;
+// Agregar al final del &lt;body&gt; de cada página
+async function trackPageVisit() {
+    try {
+        await fetch('https://ingenit.cl/api/track-visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                project_code: 'hl', // Cambiar según proyecto
+                project_url: window.location.href
+            })
+        });
+    } catch (e) {
+        console.warn('Tracking failed:', e);
+    }
+}
+
+// Ejecutar al cargar la página
+window.addEventListener('load', trackPageVisit);
+&lt;/script&gt;
+    </div>
+    
+    <h3>2. React/Next.js (para aplicaciones)</h3>
+    <div class="code-block">
+// En el componente principal o layout
+import { useEffect } from 'react';
+
+export default function Layout({ children }) {
+    useEffect(() => {
+        // Track visit cuando se monta el componente
+        fetch('https://ingenit.cl/api/track-visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                project_code: 'hl', // Cambiar según proyecto
+                project_url: window.location.href
+            })
+        }).catch(e => console.warn('Tracking failed:', e));
+    }, []);
+
+    return &lt;div&gt;{children}&lt;/div&gt;;
+}
+    </div>
+    
+    <h3>3. PHP (para sitios dinámicos)</h3>
+    <div class="code-block">
+&lt;?php
+// Agregar al inicio de cada página principal
+function trackVisit($projectCode) {
+    $data = [
+        'project_code' => $projectCode,
+        'project_url' => 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
+    ];
+    
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => 'Content-Type: application/json',
+            'content' => json_encode($data)
+        ]
+    ]);
+    
+    @file_get_contents('https://ingenit.cl/api/track-visit', false, $context);
+}
+
+// Ejecutar
+trackVisit('hl'); // Cambiar según proyecto
+?&gt;
+    </div>
+
+    <h2>📈 Ver Estadísticas</h2>
+    <p>Las estadísticas se muestran en el dashboard administrativo:</p>
+    <p><strong>URL:</strong> <a href="http://localhost:3000/admin/dashboard" target="_blank">http://localhost:3000/admin/dashboard</a></p>
+    
+    <h2>🗄️ Configuración de Base de Datos</h2>
+    <p>Para configurar la tabla en Supabase, ejecuta este SQL en el editor SQL:</p>
+    <div class="code-block">
+-- 1. Crear tabla
+CREATE TABLE project_visits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_code text NOT NULL,
+  project_url text NOT NULL,
+  visitor_ip text,
+  user_agent text,
+  referrer text,
+  created_at timestamptz DEFAULT now(),
+  date_only date GENERATED ALWAYS AS (created_at::date) STORED
+);
+
+-- 2. Crear índices
+CREATE INDEX idx_project_visits_project_code ON project_visits(project_code);
+CREATE INDEX idx_project_visits_date ON project_visits(date_only);
+
+-- 3. Configurar RLS
+ALTER TABLE project_visits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anonymous insert" ON project_visits
+  FOR INSERT TO anon WITH CHECK (true);
+
+CREATE POLICY "Allow admin read" ON project_visits
+  FOR SELECT TO authenticated USING (true);
+
+-- 4. Crear vista de estadísticas
+CREATE VIEW project_visit_stats AS
+SELECT 
+  project_code,
+  project_url,
+  COUNT(*) as total_visits,
+  COUNT(DISTINCT visitor_ip) as unique_visitors,
+  COUNT(CASE WHEN date_only = CURRENT_DATE THEN 1 END) as today_visits,
+  COUNT(CASE WHEN date_only >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as week_visits,
+  COUNT(CASE WHEN date_only >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as month_visits,
+  MAX(created_at) as last_visit
+FROM project_visits
+GROUP BY project_code, project_url
+ORDER BY total_visits DESC;
+    </div>
+
+    <script>
+        async function trackVisit(projectCode, projectUrl) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<p>Enviando visita para ${projectCode}...</p>`;
+            
+            try {
+                const response = await fetch('/api/track-visit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        project_code: projectCode,
+                        project_url: projectUrl
+                    })
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<p class="success">✅ Visita registrada para ${projectCode}</p>`;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<p class="error">❌ Error: ${error}</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Error de conexión: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -101,7 +101,7 @@ export default function QuotesPage() {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from("quotes")
+        .from("rt_quotes")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -315,7 +315,7 @@ export default function QuotesPage() {
         alert(`✅ Correo enviado a ${quote.client_name} - ${quote.client_email}`);
         console.log('✅ Correo enviado:', result.messageId);
       } else {
-        throw new Error(result.details || 'Error desconocido');
+        throw new Error('Error desconocido');
       }
       
     } catch (error) {
@@ -337,7 +337,7 @@ export default function QuotesPage() {
     if (confirm('¿Estás seguro de que quieres eliminar esta cotización?')) {
       try {
         const { error } = await supabase
-          .from("quotes")
+          .from("rt_quotes")
           .delete()
           .eq('id', quoteId);
 
@@ -428,7 +428,7 @@ export default function QuotesPage() {
       
       // Actualizar en la base de datos
       const { error } = await supabase
-        .from('quotes')
+        .from('rt_quotes')
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
@@ -459,7 +459,7 @@ export default function QuotesPage() {
   };
 
   return (
-            <div className="p-4 sm:p-6 w-[98%] sm:w-[95%] mx-auto">
+      <div className="p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>

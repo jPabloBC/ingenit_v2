@@ -175,7 +175,7 @@ export const updatePricingFromMarket = async (): Promise<void> => {
         // Actualizar precios en la base de datos
         for (const componentPrice of componentPrices) {
             const { error } = await supabase
-                .from('pricing_library')
+                .from('rt_pricing_library')
                 .update({
                     base_price: componentPrice.price,
                     unit_prices: {

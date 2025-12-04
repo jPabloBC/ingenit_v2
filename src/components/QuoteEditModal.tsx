@@ -50,7 +50,7 @@ export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: Quote
         try {
             setIsLoading(true);
             const { error } = await supabase
-                .from("quotes")
+                .from("rt_quotes")
                 .update(formData)
                 .eq("id", quote.id);
 

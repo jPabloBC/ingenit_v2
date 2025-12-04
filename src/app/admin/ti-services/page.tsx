@@ -110,7 +110,7 @@ export default function TIServicesPage() {
         try {
             // Leer precios de biblioteca para Chile y mapear por service_id
             const { data: pricing, error } = await supabase
-                .from('pricing_library')
+                .from('rt_pricing_library')
                 .select('service_id, base_price, country, updated_at')
                 .eq('country', 'Chile');
             if (!error && pricing) {
@@ -382,7 +382,7 @@ export default function TIServicesPage() {
                         try {
                             console.log('🔄 ACTUALIZANDO COTIZACIÓN EN BASE DE DATOS:', quoteId);
                             const { data, error } = await supabase
-                                .from("quotes")
+                                .from("rt_quotes")
                                 .update({
                                     services: updatedServices,
                                     total_amount: updatedFormData.total_amount,

@@ -28,7 +28,7 @@ export const getPricingForService = async (
 ): Promise<PricingItem | null> => {
     try {
         const { data, error } = await supabase
-            .from("pricing_library")
+            .from("rt_pricing_library")
             .select("*")
             .eq("service_id", serviceId)
             .eq("country", country)
@@ -50,7 +50,7 @@ export const getPricingForService = async (
 export const getAllPricingForCountry = async (country: string): Promise<PricingItem[]> => {
     try {
         const { data, error } = await supabase
-            .from("pricing_library")
+            .from("rt_pricing_library")
             .select("*")
             .eq("country", country)
             .eq("is_active", true)
