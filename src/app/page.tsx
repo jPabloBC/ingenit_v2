@@ -3,6 +3,7 @@ import { Laptop, Bot, Settings, X, ArrowRight, CheckCircle } from "lucide-react"
 import { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabaseClient";
 
 function ProductCard({
   title,
@@ -62,12 +63,27 @@ export default function Home() {
     return () => document.removeEventListener("keydown", handleEsc);
   }, [open]);
 
+  useEffect(() => {
+    // Registrar visita mediante el endpoint POST /api/visits
+    const isLocalhost = window.location.hostname === 'localhost';
+    if (isLocalhost) return; // Excluir visitas locales
+
+    (async () => {
+      try {
+        await fetch('/api/visits', { method: 'POST' });
+      } catch (e) {
+        // no bloquear la página por errores de tracking
+        console.debug('visit tracking failed', e);
+      }
+    })();
+  }, []);
+
   return (
     <main className="relative z-0 min-h-screen bg-white text-gray2 font-body">
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-br from-blue-50 via-white to-gray-50">
+      <section className="pt-32 pb-20 bg-gradient-to-br from-blue15 via-white to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-title text-gray-900 mb-6 leading-tight">
@@ -82,7 +98,7 @@ export default function Home() {
             <div ref={menuRef} className="relative inline-block">
               <button
                 onClick={() => setOpen(!open)}
-                className="bg-blue6 text-white px-8 py-4 rounded-xl hover:bg-blue7 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center space-x-2 mx-auto"
+                className="bg-blue6 text-white px-8 py-4 rounded-xl hover:bg-blue4 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center space-x-2 mx-auto"
               >
                 <span>Contáctanos</span>
                 <ArrowRight className="w-5 h-5" />
@@ -111,20 +127,20 @@ export default function Home() {
                     <div className="space-y-3">
                       <a
                         href="mailto:gerencia@ingenit.cl"
-                        className="block w-full px-6 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200 font-medium"
+                        className="block w-full px-6 py-3 text-gray-700 hover:bg-blue4 hover:text-gray9 rounded-lg transition-colors duration-200 font-medium"
                       >
                         Contacto por correo
                       </a>
                       <a
                         href="/contact"
-                        className="block w-full px-6 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200 font-medium"
+                        className="block w-full px-6 py-3 text-gray-700 hover:bg-blue4 hover:text-gray9 rounded-lg transition-colors duration-200 font-medium"
                       >
                         Formulario de contacto
                       </a>
                       <a
                         href="https://wa.me/56975385487?text=Hola%20quiero%20más%20información"
                         target="_blank"
-                        className="block w-full px-6 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200 font-medium"
+                        className="block w-full px-6 py-3 text-gray-700 hover:bg-blue4 hover:text-gray9 rounded-lg transition-colors duration-200 font-medium"
                       >
                         WhatsApp
                       </a>
@@ -134,7 +150,7 @@ export default function Home() {
                           const chatToggle = document.getElementById("chat-bot-toggle");
                           if (chatToggle) chatToggle.click();
                         }}
-                        className="block w-full px-6 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200 font-medium"
+                        className="block w-full px-6 py-3 text-gray-700 hover:bg-blue4 hover:text-gray9 rounded-lg transition-colors duration-200 font-medium"
                       >
                         ChatBot en vivo
                       </button>
