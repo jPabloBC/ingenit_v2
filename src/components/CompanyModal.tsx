@@ -1,4 +1,13 @@
 "use client";
+
+function generateRandomPassword(length = 12) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+  let pass = '';
+  for (let i = 0; i < length; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return pass;
+}
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSidebar } from "@/contexts/SidebarContext";
@@ -6,6 +15,7 @@ import { X, Save, UploadCloud, Image, Camera, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { countries, getRegionsByCountry, getCitiesByRegion } from "@/lib/geoAdapter";
 import PhoneField from "@/components/PhoneField";
+import { RefreshCw } from "lucide-react";
 
 interface Company {
   id?: string;
@@ -103,8 +113,7 @@ export default function CompanyModal({ isOpen, onClose, onCompanyCreated, editin
     return str
       .toLowerCase()
       .split(' ')
-      .filter(Boolean)
-      .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+      .map(s => s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : '')
       .join(' ');
   }
 
@@ -182,8 +191,10 @@ export default function CompanyModal({ isOpen, onClose, onCompanyCreated, editin
           setCustomIndustry(editingCompany.industry);
         }
         
-        // Load administrator data for editing
-        loadAdministratorData(editingCompany.id);
+        // Load administrator data for editing (only if we have a valid id)
+        if (editingCompany.id) {
+          loadAdministratorData(editingCompany.id);
+        }
       } else {
       // Reset form data for new company
       setFormData({
@@ -550,8 +561,8 @@ export default function CompanyModal({ isOpen, onClose, onCompanyCreated, editin
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Email</label>
-              <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="border p-2 rounded w-full" />
+              <label className="block text-sm mb-1">Email Empresa</label>
+              <input name="email" value={formData.email} onChange={handleChange} placeholder="Email Empresa" className="border p-2 rounded w-full" />
             </div>
 
             <div>
@@ -615,36 +626,40 @@ export default function CompanyModal({ isOpen, onClose, onCompanyCreated, editin
               <input value={adminLastName} onChange={(e) => setAdminLastName(e.target.value)} onBlur={handleAdminLastNameBlur} placeholder="Apellidos" className="border p-2 rounded w-full" />
             </div>
 
-            {adminAvailable ? (
-              <>
-                <div>
-                  <label className="block text-sm mb-1">Correo administrador</label>
-                  <input id="admin-email" value={adminEmailToCreate} onChange={(e) => setAdminEmailToCreate(e.target.value)} placeholder="Email admin@empresa.com" className="border p-2 rounded w-full" disabled={!!editingCompany} />
-                </div>
+            <>
+              <div>
+                <label className="block text-sm mb-1 flex items-center justify-between">
+                  <span>Correo administrador</span>
+                  <button
+                    type="button"
+                    className="text-xs text-orange-600 hover:underline ml-2"
+                    onClick={() => setAdminEmailToCreate(formData.email || '')}
+                    disabled={!formData.email}
+                  >
+                    Email Empresa
+                  </button>
+                </label>
+                <input id="admin-email" value={adminEmailToCreate} onChange={(e) => setAdminEmailToCreate(e.target.value)} placeholder="Email admin@empresa.com" className="border p-2 rounded w-full" />
+              </div>
 
-                <div>
-                  <label className="block text-sm mb-1">Contraseña administrador (temporal)</label>
-                  <div className="relative">
-                    <input id="admin-password" type={showAdminPassword ? "text" : "password"} value={adminPasswordToCreate} onChange={(e) => setAdminPasswordToCreate(e.target.value)} placeholder="Contraseña temporal" className="border p-2 rounded w-full pr-10" disabled={!!editingCompany} />
-                    <button type="button" onClick={() => setShowAdminPassword(!showAdminPassword)} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                      {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+              <div>
+                <label className="block text-sm mb-1">Contraseña administrador (temporal)</label>
+                <div className="relative">
+                  <input id="admin-password" type={showAdminPassword ? "text" : "password"} value={adminPasswordToCreate} onChange={(e) => setAdminPasswordToCreate(e.target.value)} placeholder="Contraseña temporal" className="border p-2 rounded w-full pr-16" />
+                  <button
+                    type="button"
+                    onClick={() => setAdminPasswordToCreate(generateRandomPassword(12))}
+                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-orange-600"
+                    title="Generar contraseña aleatoria"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button type="button" onClick={() => setShowAdminPassword(!showAdminPassword)} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                    {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm mb-1">Crear administrador</label>
-                  <div className="border p-2 rounded w-full text-sm text-gray-500">Funcionalidad no disponible en este entorno</div>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1">Contraseña administrador (temporal)</label>
-                  <div className="border p-2 rounded w-full text-sm text-gray-500">—</div>
-                </div>
-              </>
-            )}
+              </div>
+            </>
 
             {/* Admin personal details: rut, telefono */}
             <div>

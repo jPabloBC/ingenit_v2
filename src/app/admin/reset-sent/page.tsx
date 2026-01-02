@@ -8,7 +8,7 @@ export default function ResetSent() {
   const [isResending, setIsResending] = useState(false);
   
   // Obtener el email de los parámetros de URL si existe
-  const email = searchParams.get('email') || 'tu correo electrónico';
+  const email = searchParams?.get('email') ?? 'tu correo electrónico';
 
   const handleResend = async () => {
     setIsResending(true);

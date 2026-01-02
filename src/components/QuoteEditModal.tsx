@@ -23,6 +23,11 @@ interface Quote {
     valid_until: string;
     notes: string;
     terms_conditions: string;
+    // Suscripción
+    subscription_enabled?: boolean;
+    subscription_monthly?: number;
+    subscription_description?: string;
+    iva_included?: boolean;
     created_at: string;
 }
 
@@ -34,13 +39,13 @@ interface QuoteEditModalProps {
 }
 
 export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: QuoteEditModalProps) {
-    const [formData, setFormData] = useState<Partial<Quote>>({});
+    const [formData, setFormData] = useState<Partial<Quote>>({ services: [], total_amount: 0 });
     const [isLoading, setIsLoading] = useState(false);
     const [editingService, setEditingService] = useState<number | null>(null);
 
     useEffect(() => {
         if (quote) {
-            setFormData(quote);
+            setFormData({ ...quote, services: quote.services ?? [] });
         }
     }, [quote]);
 
@@ -68,7 +73,7 @@ export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: Quote
     const updateService = (index: number, field: string, value: any) => {
         if (!formData) return;
 
-        const updatedServices = [...formData.services];
+        const updatedServices = [...(formData.services ?? [])];
         updatedServices[index] = {
             ...updatedServices[index],
             [field]: value
@@ -86,7 +91,7 @@ export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: Quote
     const removeService = (index: number) => {
         if (!formData) return;
 
-        const updatedServices = formData.services.filter((_, i) => i !== index);
+        const updatedServices = (formData.services ?? []).filter((_, i) => i !== index);
         const total = updatedServices.reduce((sum, service) => sum + (service.price || 0), 0);
 
         setFormData({
@@ -212,7 +217,7 @@ export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: Quote
                     <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Servicios</h3>
                         <div className="space-y-4">
-                            {formData.services.map((service, index) => (
+                            {(formData.services ?? []).map((service, index) => (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="font-medium text-gray-900">{service.name}</h4>
@@ -315,6 +320,66 @@ export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: Quote
                                 {formatCurrency(formData.total_amount || 0)}
                             </span>
                         </div>
+                    </div>
+
+                    {/* Suscripción mensual (editor) */}
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                        <h3 className="text-lg font-medium text-gray-900 mb-3">Suscripción mensual</h3>
+                        <div className="flex items-center gap-3 mb-3">
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={!!(formData.subscription_enabled || (formData.subscription_monthly && formData.subscription_monthly > 0))}
+                                    onChange={(e) => setFormData({...formData, subscription_enabled: e.target.checked})}
+                                    className="w-4 h-4"
+                                />
+                                <span className="text-gray-700">Cobrar suscripción mensual (cobro aparte)</span>
+                            </label>
+                        </div>
+                        {(formData.subscription_enabled || (formData.subscription_monthly && formData.subscription_monthly > 0)) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Monto suscripción mensual</label>
+                                    <input
+                                        type="number"
+                                        value={formData.subscription_monthly ?? 0}
+                                        onChange={(e) => setFormData({...formData, subscription_monthly: parseFloat(e.target.value) || 0})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={formData.subscription_description || ''}
+                                        onChange={(e) => setFormData({...formData, subscription_description: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                <div className="col-span-1 md:col-span-2 flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="radio"
+                                            name="iva_option_edit"
+                                            checked={!!formData.iva_included}
+                                            onChange={() => setFormData({...formData, iva_included: true})}
+                                            className="w-4 h-4"
+                                        />
+                                        <span>IVA incluido</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="radio"
+                                            name="iva_option_edit"
+                                            checked={!formData.iva_included}
+                                            onChange={() => setFormData({...formData, iva_included: false})}
+                                            className="w-4 h-4"
+                                        />
+                                        <span>+ IVA</span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Notas y Términos */}

@@ -373,6 +373,26 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-600 text-left mt-1">Panel de administración</p>
             </button>
           </div>
+
+          {/* Proyecto CN - cn.ingenit.cl */}
+          <div className="group">
+            <button
+              onClick={() => {
+                trackDashboardInteraction('project_click', 'cn');
+                router.push("/admin/cn");
+              }}
+              className="w-full p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 hover:from-cyan-100 hover:to-cyan-200 rounded-md border border-cyan-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-cyan-600 rounded-md">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <Users className="w-4 h-4 text-cyan-600 group-hover:text-cyan-800" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-left">CN - cn.ingenit.cl</h3>
+              <p className="text-xs text-gray-600 text-left mt-1">Gestión de usuarios y tablas CN</p>
+            </button>
+          </div>
         </div>
       </div>
 

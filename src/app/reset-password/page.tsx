@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
-export default function ResetPassword() {
+export default function ResetPasswordPublic() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,8 +14,7 @@ export default function ResetPassword() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Comprobar que hay token de restablecimiento personalizado en la URL
-    const t = searchParams.get('token');
+    const t = searchParams?.get('token');
     if (!t) {
       setError('Enlace de restablecimiento inválido');
       return;
@@ -29,7 +27,6 @@ export default function ResetPassword() {
     setError("");
     setSuccess("");
 
-    // Validaciones
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres");
       setIsLoading(false);
@@ -43,7 +40,7 @@ export default function ResetPassword() {
     }
 
     try {
-      const token = searchParams.get('token');
+      const token = searchParams?.get('token');
       if (!token) {
         setError('Token de restablecimiento no proporcionado');
         setIsLoading(false);
@@ -73,17 +70,11 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-title text-gray-900 mb-2">
-            Restablecer Contraseña
-          </h1>
-          <p className="text-gray-600">
-            Establece tu nueva contraseña segura
-          </p>
+          <h1 className="text-2xl font-title text-gray-900 mb-2">Restablecer Contraseña</h1>
+          <p className="text-gray-600">Establece tu nueva contraseña segura</p>
         </div>
 
-        {/* Formulario */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -95,23 +86,24 @@ export default function ResetPassword() {
             {success && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <p className="text-green-600 text-sm">{success}</p>
-                <p className="text-green-600 text-xs mt-2">Pulsa el botón para ir al login si lo deseas.</p>
+                <p className="text-green-600 text-xs mt-2">Pulsa el botón para abrir la app CN.</p>
                 <div className="mt-3 text-center">
                   <button
                     type="button"
-                    onClick={() => router.push('/admin/login')}
+                    onClick={() => {
+                      try { window.open('https://cn.ingenit.cl', '_blank'); } catch (e) {}
+                      try { window.close(); } catch (e) {}
+                    }}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
                   >
-                    Ir al login
+                    Abrir CN
                   </button>
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Nueva Contraseña
-              </label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Nueva Contraseña</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -122,32 +114,15 @@ export default function ResetPassword() {
                   required
                   minLength={6}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors">
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Mínimo 6 caracteres
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Confirmar Contraseña
-              </label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Confirmar Contraseña</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -157,45 +132,18 @@ export default function ResetPassword() {
                   placeholder="••••••••"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {showConfirmPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors">
+                  {showConfirmPassword ? 'Ocultar' : 'Mostrar'}
                 </button>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
+            <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
               {isLoading ? "Actualizando..." : "Actualizar Contraseña"}
             </button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => router.push("/admin/login")}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
-              >
-                Volver al login
-              </button>
-            </div>
           </form>
 
-          {/* Información de seguridad */}
           <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <h3 className="text-sm font-semibold text-blue-800 mb-2">Consejos de Seguridad:</h3>
             <ul className="text-xs text-blue-700 space-y-1">
@@ -207,23 +155,12 @@ export default function ResetPassword() {
             </ul>
           </div>
 
-          {/* Información del proceso */}
-          <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-200">
-            <h3 className="text-sm font-semibold text-green-800 mb-2">¿Qué pasa después?</h3>
-            <p className="text-xs text-green-700">
-              Una vez que actualices tu contraseña, serás redirigido al login para iniciar sesión 
-              con tu nueva contraseña. El enlace de restablecimiento ya no será válido.
-            </p>
-          </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            © 2025 IngenIT ® - Panel de Administración
-          </p>
+          <p className="text-sm text-gray-500">© 2025 IngenIT ®</p>
         </div>
       </div>
     </div>
   );
-} 
+}

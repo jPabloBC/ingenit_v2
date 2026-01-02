@@ -754,11 +754,12 @@ export default function CreateQuotePage() {
     const [editingEquipmentId, setEditingEquipmentId] = useState<string | null>(null);
     const [equipmentEditForm, setEquipmentEditForm] = useState<Partial<Equipment>>({});
 
-    const updateFormData = (field: keyof QuoteForm, value: unknown) => {
+    const updateFormData = (field: keyof QuoteForm | string, value: unknown) => {
         console.log(`🔄 ACTUALIZANDO: ${field} =`, value);
         
         setFormData(prev => {
-            const updated = { ...prev, [field]: value };
+            // Usamos un casteo para permitir claves dinámicas (p. ej. "subscription_monthly")
+            const updated = { ...prev, [field as any]: value };
             
             // Guardar inmediatamente en sessionStorage
             try {
@@ -769,7 +770,7 @@ export default function CreateQuotePage() {
             }
             setEquipmentDirty(true);
 
-            return updated;
+            return updated as QuoteForm;
         });
     };
 
@@ -1405,14 +1406,15 @@ export default function CreateQuotePage() {
         };
     }, []);
 
-    // CARGA AUTORITATIVA DESDE DB EN MODO EDICIÓN
+    // CARGA AUTORITATIVA DESDE DB EN MODO EDICIÓN o VISUALIZACIÓN
     useEffect(() => {
         const url = new URLSearchParams(window.location.search);
         const isEdit = url.get('edit') === 'true';
+        const isView = url.get('view') === 'true';
         const quoteId = url.get('id');
-    
-        if (!isEdit || !quoteId) return;
-    
+
+        if (!(isEdit || isView) || !quoteId) return;
+
         (async () => {
         try {
             const { data, error } = await supabase
@@ -1420,10 +1422,10 @@ export default function CreateQuotePage() {
             .select("*")
             .eq("id", quoteId)
             .single();
-    
+
             if (error) throw error;
-    
-            const formDataFromQuote: QuoteForm = {
+
+            const formDataFromQuote = {
             client_rut: data.client_rut || '',
             client_name: data.client_name || '',
             client_email: data.client_email || '',
@@ -1445,22 +1447,36 @@ export default function CreateQuotePage() {
             discount_type: data.discount_type || 'none',
             discount_value: data.discount_value || 0,
             discount_description: data.discount_description || '',
-            validity_message: data.validity_message || 'Cotización válida hasta "{fecha}" por disponibilidad de equipos y cambios en costos de procesos'
-            };
-    
+            validity_message: data.validity_message || 'Cotización válida hasta "{fecha}" por disponibilidad de equipos y cambios en costos de procesos',
+            // Suscripción
+            subscription_enabled: data.subscription_enabled === true,
+            subscription_monthly: data.subscription_monthly || 0,
+            subscription_description: data.subscription_description || '',
+            iva_included: data.iva_included === true
+            } as unknown as QuoteForm;
+
             setFormData(formDataFromQuote);
-            setIsEditMode(true);
+            if (isEdit) {
+                setIsEditMode(true);
+                sessionStorage.setItem('quoteFormData', JSON.stringify(formDataFromQuote));
+                sessionStorage.setItem('editMode', 'true');
+                sessionStorage.setItem('editQuoteId', quoteId);
+                sessionStorage.removeItem('viewQuoteData');
+            } else if (isView) {
+                setIsViewMode(true);
+                // asegurar que viewQuoteData contiene campos de suscripción
+                sessionStorage.setItem('viewQuoteData', JSON.stringify({
+                    ...data,
+                    subscription_enabled: data.subscription_enabled ?? false,
+                    subscription_monthly: data.subscription_monthly ?? 0,
+                    subscription_description: data.subscription_description ?? '',
+                    iva_included: data.iva_included ?? false
+                }));
+                sessionStorage.removeItem('editQuoteData');
+            }
             setCurrentQuoteId(quoteId);
             setCurrentStep(4);
             setLoadedFromDB(true);
-    
-            // persistir para no perder al navegar
-            sessionStorage.setItem('quoteFormData', JSON.stringify(formDataFromQuote));
-            sessionStorage.setItem('editMode', 'true');
-            sessionStorage.setItem('editQuoteId', quoteId);
-            // limpiar posibles restos de otras pantallas
-            sessionStorage.removeItem('editQuoteData');
-            sessionStorage.removeItem('viewQuoteData');
         } catch (e) {
             console.error('❌ Error cargando cotización desde DB:', e);
         }
@@ -1506,7 +1522,12 @@ export default function CreateQuotePage() {
                         discount_type: quoteData.discount_type || 'none',
                         discount_value: quoteData.discount_value || 0,
                         discount_description: quoteData.discount_description || '',
-                        validity_message: quoteData.validity_message || "Cotización válida hasta \"{fecha}\" por disponibilidad de equipos y cambios en costos de procesos"
+                        validity_message: quoteData.validity_message || "Cotización válida hasta \"{fecha}\" por disponibilidad de equipos y cambios en costos de procesos",
+                        // Suscripción
+                        subscription_enabled: quoteData.subscription_enabled === true,
+                        subscription_monthly: quoteData.subscription_monthly || 0,
+                        subscription_description: quoteData.subscription_description || '',
+                        iva_included: quoteData.iva_included === true
                     };
                 
                 setFormData(formDataFromQuote);
@@ -1543,15 +1564,20 @@ export default function CreateQuotePage() {
                                    Array.isArray(quoteData.services) ? quoteData.services : [],
                     selected_equipment: Array.isArray(quoteData.selected_equipment) ? quoteData.selected_equipment : 
                                      Array.isArray(quoteData.equipment) ? quoteData.equipment : [],
-                    total_amount: quoteData.total_amount || 0,
-                    equipment_total: quoteData.equipment_total || 0,
-                    valid_until: quoteData.valid_until || '',
-                    notes: quoteData.notes || '',
-                    terms_conditions: quoteData.terms_conditions || '',
+                        total_amount: quoteData.total_amount || 0,
+                        equipment_total: quoteData.equipment_total || 0,
+                        valid_until: quoteData.valid_until || '',
+                        notes: quoteData.notes || '',
+                        terms_conditions: quoteData.terms_conditions || '',
                     discount_type: quoteData.discount_type || 'none',
                     discount_value: quoteData.discount_value || 0,
                     discount_description: quoteData.discount_description || '',
-                    validity_message: quoteData.validity_message || "Cotización válida hasta \"{fecha}\" por disponibilidad de equipos y cambios en costos de procesos"
+                        validity_message: quoteData.validity_message || "Cotización válida hasta \"{fecha}\" por disponibilidad de equipos y cambios en costos de procesos",
+                        // Suscripción
+                        subscription_enabled: quoteData.subscription_enabled === true,
+                        subscription_monthly: quoteData.subscription_monthly || 0,
+                        subscription_description: quoteData.subscription_description || '',
+                        iva_included: quoteData.iva_included === true
                 };
                 
                 setFormData(formDataFromQuote);
@@ -1977,6 +2003,11 @@ export default function CreateQuotePage() {
                 discount_description: formData.discount_description,
                 validity_message: formData.validity_message,
                 final_total: calculateFinalTotal(),
+                // Suscripción
+                subscription_enabled: (formData as any).subscription_enabled ?? false,
+                subscription_monthly: (formData as any).subscription_monthly ?? 0,
+                subscription_description: (formData as any).subscription_description ?? '',
+                iva_included: (formData as any).iva_included ?? false,
                 quote_number: quoteNumberValue,
                 created_at: new Date().toISOString()
             };
@@ -2034,6 +2065,11 @@ export default function CreateQuotePage() {
                 discount_description: formData.discount_description,
                 validity_message: formData.validity_message,
                 final_total: calculateFinalTotal(),
+                // Suscripción
+                subscription_enabled: (formData as any).subscription_enabled ?? false,
+                subscription_monthly: (formData as any).subscription_monthly ?? 0,
+                subscription_description: (formData as any).subscription_description ?? '',
+                iva_included: (formData as any).iva_included ?? false,
                 quote_number: quoteNumberValue,
                 created_at: new Date().toISOString()
             };
@@ -2095,6 +2131,11 @@ export default function CreateQuotePage() {
                 discount_description: formData.discount_description,
                 validity_message: formData.validity_message,
                 final_total: calculateTotalWithIVA(),
+                // Suscripción
+                subscription_enabled: (formData as any).subscription_enabled ?? false,
+                subscription_monthly: (formData as any).subscription_monthly ?? 0,
+                subscription_description: (formData as any).subscription_description ?? '',
+                iva_included: (formData as any).iva_included ?? false,
                 quote_number: quoteNumberValue,
                 created_at: new Date().toISOString()
             };
@@ -2292,6 +2333,11 @@ export default function CreateQuotePage() {
                 discount_value: formData.discount_value || 0,
                 discount_description: formData.discount_description || '',
                 final_total: calculateFinalTotal(),
+                // Campos de suscripción (accesos casted para evitar errores si QuoteForm no declara estos campos)
+                subscription_enabled: (formData as any).subscription_enabled === true,
+                subscription_monthly: (formData as any).subscription_monthly || 0,
+                subscription_description: (formData as any).subscription_description || '',
+                iva_included: (formData as any).iva_included === true,
                 status: status
             };
 
@@ -2312,6 +2358,10 @@ export default function CreateQuotePage() {
             console.log('Equipos:', datosAGuardar.equipment);
             console.log('Total servicios:', datosAGuardar.total_amount);
             console.log('Total equipos:', datosAGuardar.equipment_total);
+            console.log('Suscripción enabled:', datosAGuardar.subscription_enabled);
+            console.log('Suscripción mensual:', datosAGuardar.subscription_monthly);
+            console.log('Suscripción desc:', datosAGuardar.subscription_description);
+            console.log('Suscripción IVA incluido?:', datosAGuardar.iva_included);
             console.log('Datos completos:', datosAGuardar);
             console.log('🔍 DEBUG FINAL:');
             console.log('- isEdit:', isEdit);
@@ -2886,6 +2936,65 @@ export default function CreateQuotePage() {
                     </div>
                 </div>
             )}
+
+            {/* Suscripción obligatoria */}
+            <div className="mt-6 p-4 bg-white rounded-lg border">
+                <h4 className="font-semibold mb-2">Suscripción (facturación mensual)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label className="text-sm font-medium text-gray-700">Monto mensual</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            value={(formData as any).subscription_monthly ? formatCurrencyLocal((formData as any).subscription_monthly) : ''}
+                            onChange={(e) => {
+                                // Normalizar: quitar separadores de miles (.) y convertir coma decimal a punto
+                                const cleaned = e.target.value.replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.\-]/g, '');
+                                const num = parseFloat(cleaned) || 0;
+                                updateFormData('subscription_monthly', num);
+                                updateFormData('subscription_enabled', true);
+                            }}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue8"
+                            placeholder="Ej: 100000"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">Formato: {formatCurrencyLocal((formData as any).subscription_monthly || 0)}</div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-gray-700">Descripción</label>
+                        <input
+                            type="text"
+                            value={(formData as any).subscription_description || ''}
+                            onChange={(e) => updateFormData('subscription_description', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue8"
+                            placeholder="Ej: Plan de soporte mensual"
+                        />
+
+                        <div className="mt-2 text-sm flex gap-4 items-center">
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="iva_included"
+                                    checked={(formData as any).iva_included === true}
+                                    onChange={() => updateFormData('iva_included', true)}
+                                    className="accent-blue-600"
+                                />
+                                IVA incluido
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="iva_included"
+                                    checked={(formData as any).iva_included === false}
+                                    onChange={() => updateFormData('iva_included', false)}
+                                    className="accent-blue-600"
+                                />
+                                + IVA
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Vista previa de servicios seleccionados */}
             {formData.selected_services.length > 0 && (
@@ -3556,6 +3665,11 @@ export default function CreateQuotePage() {
                             {formatCurrencyLocal((formData.total_amount || 0) + (formData.equipment_total || 0))}
                         </span>
                     </div>
+                    {/* Total sin descuento que incluye IVA sobre el subtotal (siempre visible) */}
+                    <div className="flex justify-between text-sm text-gray-700 mt-1">
+                        <span className="">Total sin descuento (incluye IVA):</span>
+                        <span className="font-medium">{formatCurrencyLocal(((formData.total_amount || 0) + (formData.equipment_total || 0)) * 1.19)}</span>
+                    </div>
                     
                     {/* Mostrar descuento si existe */}
                     {formData.discount_type !== 'none' && formData.discount_value > 0 && (
@@ -3564,7 +3678,7 @@ export default function CreateQuotePage() {
                                 <span>Descuento ({formData.discount_type === 'percentage' ? `${formData.discount_value}%` : formatCurrencyLocal(formData.discount_value)}):</span>
                                 <span className="font-medium">-{formatCurrencyLocal(calculateDiscount())}</span>
                             </div>
-                            {formData.discount_description && (
+                            {formData.discount_description && formData.discount_description.trim() !== 'Aplica a suscripción mensual' && (
                                 <div className="text-xs text-gray-500 italic">
                                     {formData.discount_description}
                                 </div>
@@ -3592,6 +3706,41 @@ export default function CreateQuotePage() {
                             {formatCurrencyLocal(calculateTotalWithIVA())}
                         </span>
                     </div>
+                    {/* Mostrar suscripción separada del total final */}
+                    {(((formData as any).subscription_enabled === true) || (((formData as any).subscription_monthly || 0) > 0)) && (
+                        <div className="mt-3 border-t border-dashed border-gray-200 pt-3">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-gray-700 font-medium">Suscripción (mensual)</div>
+                                    {(formData as any).subscription_description && (
+                                        <div className="text-xs text-gray-500">{(formData as any).subscription_description}</div>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <div className="font-medium subscription-amount" aria-label="subscription-amount">{formatCurrencyLocal((formData as any).subscription_monthly || 0)}</div>
+                                    {(formData as any).iva_included && (
+                                        <div className="text-xs text-gray-500">IVA incluido</div>
+                                    )}
+                                    {/* Desglose: mostrar IVA y total mensual con IVA */}
+                                    {((formData as any).subscription_monthly || 0) > 0 && (
+                                        (() => {
+                                            const sub = Number((formData as any).subscription_monthly || 0);
+                                            const ivaAmount = (formData as any).iva_included ? 0 : Math.round(sub * 0.19);
+                                            const totalWithIva = sub + ivaAmount;
+                                            return (
+                                                <div className="mt-2 text-sm text-right text-gray-700">
+                                                    {!((formData as any).iva_included) && (
+                                                        <div className="text-xs">IVA (19%): <span className="font-medium">{formatCurrencyLocal(ivaAmount)}</span></div>
+                                                    )}
+                                                    <div className="font-semibold">Total mensual: <span className="ml-2">{formatCurrencyLocal(totalWithIva)}</span></div>
+                                                </div>
+                                            );
+                                        })()
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -3678,26 +3827,30 @@ export default function CreateQuotePage() {
                                     {/* Vista previa del descuento */}
                                     {formData.discount_value > 0 && (
                                         <div className="bg-white border border-blue-300 rounded-lg p-3">
-                                            <div className="text-sm text-blue-800">
-                                                <div className="flex justify-between mb-1">
-                                                    <span>Subtotal:</span>
-                                                    <span>{formatCurrencyLocal((formData.total_amount || 0) + (formData.equipment_total || 0))}</span>
+                                            <div className="space-y-1 text-sm text-gray-800">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Subtotal:</span>
+                                                    <span className="font-medium">{formatCurrencyLocal((formData.total_amount || 0) + (formData.equipment_total || 0))}</span>
                                                 </div>
-                                                <div className="flex justify-between mb-1 text-green-600">
+                                                <div className="flex justify-between text-green-600">
                                                     <span>Descuento ({formData.discount_type === 'percentage' ? `${formData.discount_value}%` : formatCurrencyLocal(formData.discount_value)}):</span>
-                                                    <span>-{formatCurrencyLocal(calculateDiscount())}</span>
+                                                    <span className="font-medium">-{formatCurrencyLocal(calculateDiscount())}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span>Total sin IVA:</span>
-                                                    <span>{formatCurrencyLocal(calculateFinalTotal())}</span>
+                                                    <span className="text-gray-700">Total sin IVA:</span>
+                                                    <span className="font-medium">{formatCurrencyLocal(calculateFinalTotal())}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm text-gray-700">
+                                                    <span>Total sin descuento (incluye IVA):</span>
+                                                    <span className="font-medium">{formatCurrencyLocal(((formData.total_amount || 0) + (formData.equipment_total || 0)) * 1.19)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span>IVA 19%:</span>
-                                                    <span>{formatCurrencyLocal(calculateIVA())}</span>
+                                                    <span className="text-gray-700">IVA 19%:</span>
+                                                    <span className="font-medium">{formatCurrencyLocal(calculateIVA())}</span>
                                                 </div>
-                                                <div className="flex justify-between font-semibold border-t border-blue-200 pt-1">
-                                                    <span>Total Final:</span>
-                                                    <span className="text-lg">{formatCurrencyLocal(calculateTotalWithIVA())}</span>
+                                                <div className="flex justify-between border-t border-blue-200 pt-1">
+                                                    <span className="text-gray-900 font-semibold">Total Final:</span>
+                                                    <span className="text-lg font-semibold">{formatCurrencyLocal(calculateTotalWithIVA())}</span>
                                                 </div>
                                             </div>
                                         </div>

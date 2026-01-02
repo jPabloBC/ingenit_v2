@@ -86,6 +86,11 @@ interface QuoteData {
   discount_description?: string;
   final_total?: number;
   validity_message?: string; // Nuevo campo para mensaje personalizado de validez
+  // Suscripción
+  subscription_enabled?: boolean;
+  subscription_monthly?: number;
+  subscription_description?: string;
+  iva_included?: boolean;
 }
 
 export const generateProfessionalQuotePDF = async (quoteData: QuoteData): Promise<jsPDF> => {
@@ -94,6 +99,8 @@ export const generateProfessionalQuotePDF = async (quoteData: QuoteData): Promis
   console.log('=== DATOS DE COTIZACIÓN ===');
   console.log('Servicios:', quoteData.selected_services);
   console.log('Equipos:', quoteData.selected_equipment);
+  // Debug: Suscripción
+  console.log('Suscripción - enabled:', quoteData.subscription_enabled, 'monthly:', quoteData.subscription_monthly, 'description:', quoteData.subscription_description, 'iva_included:', quoteData.iva_included);
   
   // Optimización: Configurar jsPDF para reducir tamaño
   const pdf = new jsPDF({
@@ -166,9 +173,6 @@ export const generateProfessionalQuotePDF = async (quoteData: QuoteData): Promis
   
   // Actualizar la paginación en todas las páginas
   updatePaginationOnAllPages(pdf, margin, contentWidth);
-  
-  // Comentario de validez SOLO en la última página, encima de la paginación
-  drawValidityCommentOnLastPage(pdf, quoteData, margin, contentWidth);
 
   return pdf;
 };
@@ -289,8 +293,8 @@ const printServicesSectionHeaders = (pdf: jsPDF, yPosition: number, margin: numb
   pdf.setFont('helvetica', 'bold');
   pdf.text('SERVICIOS INCLUIDOS', margin, yPosition);
   yPosition += 8;
-
-  // Encabezados de tabla
+  
+  
   const tableHeaders = ['Concepto', 'Cantidad', 'Precio', 'Total'];
   const tableWidths = [80, 25, 35, 35];
   const tableX = margin;
@@ -797,7 +801,91 @@ const drawPaymentAndNotes = (pdf: jsPDF, quoteData: QuoteData, yPosition: number
     pdf.text(`Nota: ${notesText}`, margin, yPosition);
     yPosition += 6;
   }
-  
+
+  // Incluir descripción de suscripción si está presente o si hay monto (fallback cuando el flag no se guardó)
+  if ((quoteData.subscription_enabled || Number(quoteData.subscription_monthly) > 0) && quoteData.subscription_description) {
+    pdf.setFontSize(9);
+    pdf.setTextColor(TAILWIND_COLORS.gray4);
+    const subLines = pdf.splitTextToSize(`Descripción suscripción: ${quoteData.subscription_description}`, contentWidth - 10);
+    subLines.forEach((line: string, idx: number) => {
+      pdf.text(line, margin, yPosition + (idx * 4));
+    });
+    yPosition += (subLines.length * 4) + 4;
+  }
+
+  // Incluir términos y condiciones completos si se proporcionan
+  if (quoteData.terms_conditions) {
+    pdf.setFontSize(9);
+    pdf.setTextColor(TAILWIND_COLORS.gray4);
+    pdf.setFont('helvetica', 'normal');
+    const tcLines = pdf.splitTextToSize(`Términos y Condiciones: ${quoteData.terms_conditions}`, contentWidth - 10);
+    pdf.setDrawColor(TAILWIND_COLORS.gray8);
+    pdf.setLineWidth(0.4);
+    // Separador antes de T&C: acortar ligeramente, subir un poco
+    pdf.line(margin, yPosition - 6, margin + contentWidth + 4, yPosition - 6);
+    // Reducir el espacio para que T&C quede aún más arriba
+    yPosition += 1;
+    tcLines.forEach((line: string, idx: number) => {
+      // Mover el texto ligeramente a la derecha para dar margen visual
+      pdf.text(line, margin + 6, yPosition + (idx * 4));
+    });
+    yPosition += (tcLines.length * 4) + 4;
+  }
+
+  // Comentario de validez (dinámico) justo después de T&C
+  const validUntil = quoteData.valid_until ?
+    new Date(quoteData.valid_until).toLocaleDateString('es-CL') :
+    '30 días desde la fecha de emisión';
+  const defaultValidityText = `Cotización válida hasta "${validUntil}" por disponibilidad de equipos y cambios en costos de procesos.`;
+  let validityText = quoteData.validity_message || defaultValidityText;
+  if (validityText.includes('{fecha}')) {
+    validityText = validityText.replace(/{fecha}/g, validUntil);
+  }
+
+    // Calcular caja dinámica según el ancho del texto
+    // Aumentar ligeramente el padding para dar un poco más de espacio visual
+    const lineHeight = 3;
+    const padding = 4;
+
+    // Generar líneas tentativas usando el ancho máximo posible
+    const tentativeLines = pdf.splitTextToSize(validityText, contentWidth - 20);
+    // Medir el ancho máximo de esas líneas
+    let maxTextWidth = 0;
+    tentativeLines.forEach((l: string) => {
+      const w = pdf.getTextWidth(l);
+      if (w > maxTextWidth) maxTextWidth = w;
+    });
+
+    // Determinar ancho de la caja (no mayor que contentWidth) y centrarla horizontalmente
+    const boxWidth = Math.min(maxTextWidth + padding * 2 + 4, contentWidth);
+    const boxX = margin + (contentWidth - boxWidth) / 2;
+
+    // Recalcular líneas para ajustarlas exactamente al ancho de la caja
+    const textLines = pdf.splitTextToSize(validityText, boxWidth - padding * 2);
+    const boxHeight = (textLines.length * lineHeight) + padding * 2;
+
+    // Dibujar recuadro con fondo claro y texto dentro
+    // Ajuste: subir ligeramente el recuadro (reducir pt) para compactar el espacio superior
+    const boxY = yPosition - 2; // mover 2mm hacia arriba
+    pdf.setFillColor(TAILWIND_COLORS.gray10);
+    pdf.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'F');
+    pdf.setDrawColor(TAILWIND_COLORS.gray8);
+    pdf.setLineWidth(0.5);
+    pdf.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'S');
+
+    // Ajuste: bajar solo el texto dentro de la caja sin mover la caja
+    const startY = boxY + padding + lineHeight / 2 + 1;
+    pdf.setFontSize(9);
+    pdf.setTextColor(TAILWIND_COLORS.gray2);
+    pdf.setFont('helvetica', 'normal');
+    textLines.forEach((line: string, index: number) => {
+      const textWidth = pdf.getTextWidth(line);
+      const textX = boxX + (boxWidth - textWidth) / 2; // centrar horizontalmente
+      pdf.text(line, textX, startY + (index * lineHeight));
+    });
+
+  yPosition = boxY + boxHeight + 3;
+
   return yPosition + 5;
 };
 
@@ -808,7 +896,8 @@ const drawValidityCommentOnLastPage = (pdf: jsPDF, quoteData: QuoteData, margin:
   
   const pageHeight = pdf.internal.pageSize.getHeight();
   const footerY = pageHeight - 10;
-  const paginationY = footerY - 3;
+  const paginationOffset = 4;
+  const paginationY = footerY - paginationOffset;
   
   // Posición para el comentario: justo encima de la paginación
   let yPosition = paginationY - 25; // 25mm de espacio para el comentario
@@ -828,7 +917,7 @@ const drawValidityCommentOnLastPage = (pdf: jsPDF, quoteData: QuoteData, margin:
     '30 días desde la fecha de emisión';
   
   // Texto personalizable de validez - puedes cambiar este mensaje
-  const defaultValidityText = `Cotización válida hasta "${validUntil}" por disponibilidad de equipos y cambios en costos de procesos`;
+  const defaultValidityText = `Cotización válida hasta "${validUntil}" por disponibilidad de equipos y cambios en costos de procesos.`;
   let validityText = quoteData.validity_message || defaultValidityText;
   
   // Reemplazar {fecha} con la fecha real si está presente
@@ -839,21 +928,24 @@ const drawValidityCommentOnLastPage = (pdf: jsPDF, quoteData: QuoteData, margin:
   // Dividir el texto en múltiples líneas si es necesario
   const textLines = pdf.splitTextToSize(validityText, boxWidth - 20);
   const lineHeight = 4;
-  const padding = 8;
+  // Aumentar un poco el padding general para este recuadro (solo un poco)
+  const padding = 10;
   const boxHeight = (textLines.length * lineHeight) + padding;
   
   // Fondo del recuadro
+  // Reducir ligeramente el espacio superior moviendo el recuadro 2mm hacia arriba
+  const adjustedBoxY = boxY - 2;
   pdf.setFillColor(TAILWIND_COLORS.gray10);
-  pdf.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'F');
+  pdf.roundedRect(boxX, adjustedBoxY, boxWidth, boxHeight, 3, 3, 'F');
   
   // Borde del recuadro
   pdf.setDrawColor(TAILWIND_COLORS.gray8);
   pdf.setLineWidth(0.5);
-  pdf.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'S');
+  pdf.roundedRect(boxX, adjustedBoxY, boxWidth, boxHeight, 3, 3, 'S');
   
   // Posicionar texto centrado verticalmente
   const totalTextHeight = textLines.length * lineHeight;
-  const startY = boxY + (boxHeight - totalTextHeight) / 2 + lineHeight / 2;
+  const startY = adjustedBoxY + (boxHeight - totalTextHeight) / 2 + lineHeight / 2;
   
   textLines.forEach((line: string, index: number) => {
     const textWidth = pdf.getTextWidth(line);
@@ -882,6 +974,16 @@ const drawCostSummary = (pdf: jsPDF, quoteData: QuoteData, yPosition: number, ma
   pdf.text('Subtotal:', priceColumnX + 10, yPosition);
   pdf.text(formatCurrency(subtotal), totalColumnX + tableWidths[3] - 2, yPosition, { align: 'right' });
   yPosition += 6;
+
+  // Mostrar total sin descuento que incluye IVA sobre el subtotal (siempre visible)
+  const ivaOnSubtotal = Math.round((subtotal * 0.19 + Number.EPSILON) * 100) / 100;
+  const totalWithoutDiscountWithIva = Math.round(((subtotal + ivaOnSubtotal) + Number.EPSILON) * 100) / 100;
+  pdf.setFontSize(10);
+  pdf.setTextColor(TAILWIND_COLORS.gray4);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Total s/desc. + IVA:', priceColumnX + 10, yPosition);
+  pdf.text(formatCurrency(totalWithoutDiscountWithIva), totalColumnX + tableWidths[3] - 2, yPosition, { align: 'right' });
+  yPosition += 6;
   
   // Mostrar descuento si existe
   if (quoteData.discount_type && quoteData.discount_type !== 'none' && quoteData.discount_value && quoteData.discount_value > 0) {
@@ -907,11 +1009,9 @@ const drawCostSummary = (pdf: jsPDF, quoteData: QuoteData, yPosition: number, ma
     // Calcular total después del descuento
     const totalAfterDiscount = subtotal - discountAmount;
     
-    // Línea separadora después del descuento
-    pdf.setDrawColor(TAILWIND_COLORS.gray8);
-    pdf.setLineWidth(0.5);
-    pdf.line(priceColumnX + 10, yPosition, totalColumnX + tableWidths[3], yPosition);
-    yPosition += 6;
+    // Línea separadora después del descuento (removed as requested)
+    // mantener un espacio reducido para simetría
+    yPosition += 0;
     
     // Total después del descuento
     pdf.setFontSize(11);
@@ -941,6 +1041,7 @@ const drawCostSummary = (pdf: jsPDF, quoteData: QuoteData, yPosition: number, ma
   pdf.text('IVA 19%:', priceColumnX + 10, yPosition);
   pdf.text(formatCurrency(iva), totalColumnX + tableWidths[3] - 2, yPosition, { align: 'right' });
   yPosition += 4; // Reducir espacio entre IVA y la línea
+
   
   // Línea separadora más cerca del IVA
   pdf.setDrawColor(TAILWIND_COLORS.blue6);
@@ -957,6 +1058,63 @@ const drawCostSummary = (pdf: jsPDF, quoteData: QuoteData, yPosition: number, ma
   pdf.text('Total:', priceColumnX + 10, yPosition);
   pdf.text(formatCurrency(totalGeneral), totalColumnX + tableWidths[3] - 2, yPosition, { align: 'right' });
   
+  // Divider (light gray) full width to separate totals from subscription
+  // moverla un poco hacia abajo y extenderla ligeramente hacia la derecha
+  yPosition += 7; // bajar la línea unos 3 unidades respecto a la versión previa
+  pdf.setDrawColor(TAILWIND_COLORS.blue6);
+  pdf.setLineWidth(0.4);
+  pdf.line(margin, yPosition, margin + contentWidth + 6, yPosition); // extender ligeramente a la derecha (menos)
+  yPosition += 6; // aumentar espacio abajo para bajar el bloque de suscripción
+  
+  // --- Suscripción: mostrar en bloque separado sin recuadro, label a la izquierda y valores a la derecha ---
+  // Mostrar suscripción si está habilitada o si existe un monto (fallback)
+  if (quoteData.subscription_enabled || Number(quoteData.subscription_monthly) > 0) {
+    const labelX = margin + 6;
+    const rightX = totalColumnX + tableWidths[3] - 2; // alinear con la columna de totales
+    const subBase = Number(quoteData.subscription_monthly) || 0;
+
+    // Mostrar label y base en la misma fila
+    pdf.setFontSize(11);
+    pdf.setTextColor(TAILWIND_COLORS.gray2);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Suscripción (facturación mensual):', labelX, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(formatCurrency(subBase), rightX, yPosition, { align: 'right' });
+
+    if (!quoteData.iva_included) {
+      const ivaAmount = Math.round((subBase * 0.19 + Number.EPSILON) * 100) / 100;
+      const totalWithIva = Math.round(((subBase + ivaAmount) + Number.EPSILON) * 100) / 100;
+
+      // IVA line (más pequeña y gris)
+      yPosition += 6;
+      pdf.setFontSize(10);
+      pdf.setTextColor(TAILWIND_COLORS.gray4);
+      pdf.text(`IVA (19%): ${formatCurrency(ivaAmount)}`, rightX, yPosition, { align: 'right' });
+
+      // Total suscripción label + valor debajo (identificador de total) — mostrar en azul
+      yPosition += 6;
+      pdf.setFontSize(11);
+      pdf.setTextColor(TAILWIND_COLORS.blue6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Total suscripción:', labelX, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(formatCurrency(totalWithIva), rightX, yPosition, { align: 'right' });
+      yPosition += 6;
+    } else {
+      // IVA already included — show Total suscripción label and same amount slightly below
+      yPosition += 6;
+      pdf.setFontSize(11);
+      pdf.setTextColor(TAILWIND_COLORS.blue6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Total suscripción:', labelX, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(formatCurrency(subBase), rightX, yPosition, { align: 'right' });
+      yPosition += 6;
+    }
+    // espacio final
+    yPosition += 6;
+  }
+
   return yPosition + 5;
 };
 
@@ -977,6 +1135,7 @@ const drawSignatureLine = (pdf: jsPDF, yPosition: number, margin: number, conten
 
 const drawSimpleFooter = (pdf: jsPDF, pageHeight: number, margin: number, contentWidth: number, currentPage?: number, totalPages?: number): void => {
   const footerY = pageHeight - 10;
+  const paginationOffset = 4; // ajustar paginador menos
   
   // Paginación encima del footer (si se proporcionan los números de página)
   if (currentPage !== undefined && totalPages !== undefined) {
@@ -984,7 +1143,7 @@ const drawSimpleFooter = (pdf: jsPDF, pageHeight: number, margin: number, conten
     pdf.setTextColor(TAILWIND_COLORS.gray6);
     pdf.setFont('helvetica', 'normal');
     const pageText = `Página ${currentPage} de ${totalPages}`;
-    pdf.text(pageText, margin + contentWidth - 5, footerY - 3, { align: 'right' });
+    pdf.text(pageText, margin + contentWidth - 5, footerY - paginationOffset, { align: 'right' });
   }
   
   // Franja inferior más pequeña
@@ -1010,17 +1169,17 @@ const updatePaginationOnAllPages = (pdf: jsPDF, margin: number, contentWidth: nu
     
     // Solo dibujar la paginación encima del footer
     const footerY = pageHeight - 10;
+    const paginationOffset = 4;
     
     // Limpiar el área de paginación (rectángulo blanco)
-    pdf.setFillColor(255, 255, 255); // Blanco
-    pdf.rect(margin + contentWidth - 30, footerY - 8, 30, 8, 'F');
+    // Removed background rectangle for paginator to keep footer background intact
     
     // Paginación encima del footer
     pdf.setFontSize(9);
     pdf.setTextColor(TAILWIND_COLORS.gray6);
     pdf.setFont('helvetica', 'normal');
     const pageText = `Página ${pageNum} de ${totalPages}`;
-    pdf.text(pageText, margin + contentWidth - 5, footerY - 3, { align: 'right' });
+    pdf.text(pageText, margin + contentWidth - 5, footerY - paginationOffset, { align: 'right' });
   }
 };
 
@@ -1165,24 +1324,6 @@ const sendPDFNormal = async (quoteData: QuoteData, pdfBase64: string, email: str
       if (result.success) {
       console.log('✅ Email enviado exitosamente:', result.messageId);
       
-      // Enviar notificación interna
-      try {
-        await fetch('/api/send-internal-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            quoteData: quoteData,
-            recipientEmail: email,
-            messageId: result.messageId
-          })
-        });
-        console.log('✅ Notificación interna enviada');
-      } catch (internalError) {
-        console.warn('⚠️ Error enviando notificación interna:', internalError);
-      }
-      
       alert(`✅ Correo enviado a ${quoteData.client_name} - ${email}`);
     } else {
       throw new Error(result.error || 'Error desconocido en el servidor');
@@ -1255,24 +1396,6 @@ const sendPDFInChunks = async (quoteData: QuoteData, pdfBase64: string, email: s
   }
   
   console.log('✅ PDF enviado exitosamente en chunks');
-  
-  // Enviar notificación interna
-  try {
-    await fetch('/api/send-internal-notification', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        quoteData: quoteData,
-        recipientEmail: email,
-        messageId: 'Enviado en chunks'
-      })
-    });
-    console.log('✅ Notificación interna enviada');
-  } catch (internalError) {
-    console.warn('⚠️ Error enviando notificación interna:', internalError);
-  }
   
   // Solo mostrar alert si showAlert es true
   if (showAlert) {

@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { X, Calculator, MapPin, Globe } from 'lucide-react';
-import { Service, CalculationParams } from '@/lib/serviceCalculations';
+import { CalculationParams } from '@/lib/serviceCalculations';
+
+interface Service {
+    id: string;
+    name: string;
+}
 import { getCurrencyByCountry } from '@/lib/currencyData';
 
 interface CalculationModalProps {
     service: Service;
-    onCalculate: (params: CalculationParams) => void;
+    onCalculate: (params: CalculationParams) => Promise<any> | void;
     onClose: () => void;
     country: string;
     region: string;
@@ -96,6 +101,31 @@ export default function CalculationModal({ service, onCalculate, onClose, countr
                     { key: 'devices', label: 'Tickets', type: 'number', placeholder: 'Ej: 50' },
                     { key: 'points', label: 'Horas de soporte', type: 'number', placeholder: 'Ej: 30' }
                 ];
+            case 'integracion_crm':
+                return [
+                    { key: 'devices', label: 'Sistemas a integrar', type: 'number', placeholder: 'Ej: 3' },
+                    { key: 'points', label: 'Campos personalizados', type: 'number', placeholder: 'Ej: 20' }
+                ];
+            case 'integracion_erp':
+                return [
+                    { key: 'devices', label: 'Módulos a integrar', type: 'number', placeholder: 'Ej: 5' },
+                    { key: 'points', label: 'Flujos de datos', type: 'number', placeholder: 'Ej: 15' }
+                ];
+            case 'automatizacion_procesos':
+                return [
+                    { key: 'devices', label: 'Procesos a automatizar', type: 'number', placeholder: 'Ej: 8' },
+                    { key: 'points', label: 'Tareas automatizadas', type: 'number', placeholder: 'Ej: 25' }
+                ];
+            case 'desarrollo_bot_chat':
+                return [
+                    { key: 'devices', label: 'Intenciones del bot', type: 'number', placeholder: 'Ej: 30' },
+                    { key: 'points', label: 'Integraciones', type: 'number', placeholder: 'Ej: 5' }
+                ];
+            case 'integracion_webhook':
+                return [
+                    { key: 'devices', label: 'Webhooks', type: 'number', placeholder: 'Ej: 10' },
+                    { key: 'points', label: 'Endpoints', type: 'number', placeholder: 'Ej: 15' }
+                ];
             default:
                 return [
                     { key: 'devices', label: 'Cantidad', type: 'number', placeholder: 'Ej: 1' }
@@ -106,12 +136,23 @@ export default function CalculationModal({ service, onCalculate, onClose, countr
     const handleInputChange = (key: string, value: string | number) => {
         setParams(prev => ({
             ...prev,
-            [key]: typeof value === 'string' ? parseInt(value) || 0 : value
+            [key]: key === 'complexity' ? (value as string) : (typeof value === 'string' ? parseInt(value) || 0 : value)
         }));
     };
 
-    const handleCalculate = () => {
-        onCalculate(params);
+    const [loading, setLoading] = useState(false);
+
+    const handleCalculate = async () => {
+        console.log('CalculationModal: iniciar cálculo', { service: service.id, params });
+        try {
+            setLoading(true);
+            await onCalculate(params as CalculationParams);
+        } catch (error) {
+            console.error('CalculationModal: error en onCalculate', error);
+            alert('Error calculando precio. Revisa la consola para más detalles.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -193,9 +234,10 @@ export default function CalculationModal({ service, onCalculate, onClose, countr
                     </button>
                     <button
                         onClick={handleCalculate}
-                        className="flex-1 px-4 py-2 bg-blue8 text-white rounded-lg hover:bg-blue6"
+                        disabled={loading}
+                        className={`flex-1 px-4 py-2 bg-blue8 text-white rounded-lg hover:bg-blue6 ${loading ? 'opacity-60 cursor-wait' : ''}`}
                     >
-                        Calcular Precio
+                        {loading ? 'Calculando...' : 'Calcular Precio'}
                     </button>
                 </div>
             </div>

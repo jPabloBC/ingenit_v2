@@ -69,3 +69,4 @@ next-env.d.ts
 # - src/lib/completeGeoData.ts
 # - src/lib/geoData.ts
 # - src/lib/supabaseClient.ts
+.env*.local

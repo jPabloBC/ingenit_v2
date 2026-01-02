@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as nodemailer from 'nodemailer';
+import { supabase } from '@/lib/supabaseClient';
 import path from 'path';
 import { readFile } from 'fs/promises';
 
@@ -9,7 +10,27 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { quoteData, recipientEmail } = await request.json();
+    const body = await request.json();
+    let { quoteData, recipientEmail, quoteId } = body;
+
+    // Si no se provee `quoteData` pero se entrega `quoteId`, obtener la cotización desde la DB
+    if ((!quoteData || Object.keys(quoteData).length === 0) && quoteId) {
+      try {
+        const { data, error } = await supabase
+          .from('rt_quotes')
+          .select('*')
+          .eq('id', quoteId)
+          .single();
+        if (error) throw error;
+        quoteData = data as any;
+      } catch (err) {
+        console.error('❌ Error obteniendo cotización desde DB:', err);
+        return NextResponse.json({ success: false, error: 'No se pudo obtener la cotización' }, { status: 500 });
+      }
+    }
+
+    // Soporte de preview: si se llama con ?preview=true o body.preview === true
+    const previewFlag = (request.nextUrl && request.nextUrl.searchParams.get('preview') === 'true') || (quoteData && quoteData.preview === true) || (body && body.preview === true);
 
     // Configurar el transportador de correo con Titan
     const transporter = nodemailer.createTransport({
@@ -52,8 +73,31 @@ export async function POST(request: NextRequest) {
     
     const subject = `Cotizacion ${cleanQuoteNumber} - ${cleanProjectTitle}`;
     const subtotal = (quoteData.total_amount || 0) + (quoteData.equipment_total || 0);
-    const ivaAmount = Math.round(subtotal * 0.19);
-    const totalConIva = subtotal + ivaAmount;
+
+    // Calcular descuento
+    let discountAmount = 0;
+    if (quoteData.discount_type && quoteData.discount_type !== 'none' && quoteData.discount_value) {
+      if (quoteData.discount_type === 'percentage') {
+        discountAmount = (subtotal * quoteData.discount_value) / 100;
+      } else {
+        discountAmount = quoteData.discount_value;
+      }
+    }
+
+    const totalAfterDiscount = Math.max(subtotal - (discountAmount || 0), 0);
+
+    // IVA calculado sobre el total después del descuento
+    const ivaAmount = Math.round(totalAfterDiscount * 0.19);
+    const totalConIva = Math.round((totalAfterDiscount + ivaAmount) * 100) / 100;
+
+    // IVA y total sobre el subtotal sin descuento (Total s/desc. + IVA)
+    const ivaOnSubtotal = Math.round((subtotal * 0.19 + Number.EPSILON) * 100) / 100;
+    const totalWithoutDiscountWithIva = Math.round(((subtotal + ivaOnSubtotal) + Number.EPSILON) * 100) / 100;
+
+    // Suscripción
+    const subscriptionEnabled = Boolean(quoteData.subscription_enabled) || Number(quoteData.subscription_monthly) > 0;
+    const subscriptionMonthly = Number(quoteData.subscription_monthly) || 0;
+    const subscriptionIvaIncluded = Boolean(quoteData.iva_included);
     
     // Normalizar teléfono para evitar prefijos repetidos y espacios raros
     const rawPhone = (quoteData.client_phone || '').toString().trim().replace(/\s+/g, ' ');
@@ -110,7 +154,7 @@ export async function POST(request: NextRequest) {
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8f9fa" align="center">
           <tr>
             <td align="center">
-              <table role="presentation" cellpadding="0" cellspacing="0" width="700" class="container">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="container" style="max-width:700px;margin:0 auto;">
                 <tr>
                   <td class="header">
                     <div class="h1">Cotización ${quoteData.quote_number || quoteData.id}</div>
@@ -131,15 +175,85 @@ export async function POST(request: NextRequest) {
                           ${phoneDisplay ? `<div class=\"row\"><strong>Teléfono:</strong> ${phoneDisplay}</div>` : ''}
                         </td>
                       </tr>
+                      ${subscriptionEnabled ? `
                       <tr><td height="16"></td></tr>
                       <tr>
                         <td class="card p-32">
+                          <div class="h3">Suscripción</div>
+                          ${subscriptionIvaIncluded ? `
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                            <tr>
+                              <td style="padding:8px 0; color:#2c3e50;">Suscripción (mensual)</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)} (IVA incluido)</td>
+                            </tr>
+                          </table>
+                          ` : `
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                            <tr>
+                              <td style="padding:8px 0; color:#2c3e50;">Suscripción (base)</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding:8px 0; color:#2c3e50;">IVA 19%</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(Math.round(subscriptionMonthly * 0.19))}</td>
+                            </tr>
+                            <tr style="font-weight:bold">
+                              <td style="padding:8px 0; color:#2c3e50;">Total suscripción</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(Math.round(subscriptionMonthly * 1.19))}</td>
+                            </tr>
+                          </table>
+                          `}
+                        </td>
+                      </tr>
+                      <tr><td height="16"></td></tr>
+                      ` : '<tr><td height="16"></td></tr>'}
+                      <tr>
+                        <td class="card p-32">
                           <div class="h3">Resumen de la cotización</div>
-                          ${quoteData.selected_services && quoteData.selected_services.length > 0 ? `<div class=\"row\"><span>Servicios incluidos</span><span style=\"float:right;\">${quoteData.selected_services.length}</span></div>` : ''}
-                          ${quoteData.selected_equipment && quoteData.selected_equipment.length > 0 ? `<div class=\"row\"><span>Equipos incluidos</span><span style=\"float:right;\">${quoteData.selected_equipment.length}</span></div>` : ''}
-                          <div class=\"row\"><span>Subtotal</span><span style=\"float:right;\">$${new Intl.NumberFormat('es-CL').format(subtotal)}</span></div>
-                          <div class=\"row\"><span>IVA 19%</span><span style=\"float:right;\">$${new Intl.NumberFormat('es-CL').format(ivaAmount)}</span></div>
-                          <div class=\"row\" style=\"border-bottom:none;font-weight:bold\"><span>Total</span><span style=\"float:right;\">$${new Intl.NumberFormat('es-CL').format(totalConIva)}</span></div>
+                          ${quoteData.selected_services && quoteData.selected_services.length > 0 ? `
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                            <tr>
+                              <td style="padding:8px 0; color:#2c3e50;">Servicios incluidos</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">${quoteData.selected_services.length}</td>
+                            </tr>
+                          </table>
+                          ` : ''}
+                          ${quoteData.selected_equipment && quoteData.selected_equipment.length > 0 ? `
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                            <tr>
+                              <td style="padding:8px 0; color:#2c3e50;">Equipos incluidos</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">${quoteData.selected_equipment.length}</td>
+                            </tr>
+                          </table>
+                          ` : ''}
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">Subtotal</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(subtotal)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">Total s/desc. + IVA</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(totalWithoutDiscountWithIva)}</td>
+                            </tr>
+                            ${discountAmount && discountAmount > 0 ? `
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">Descuento</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">- $${new Intl.NumberFormat('es-CL').format(Math.round(discountAmount))}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">Total después del descuento</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(Math.round(totalAfterDiscount))}</td>
+                            </tr>
+                            ` : ''}
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">IVA 19%</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(ivaAmount)}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding:10px 0; font-weight:bold; color:#2c3e50;">Total</td>
+                              <td style="padding:10px 0; font-weight:bold; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(totalConIva)}</td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                       <tr><td height="16"></td></tr>
@@ -192,8 +306,15 @@ export async function POST(request: NextRequest) {
       ${quoteData.selected_services && quoteData.selected_services.length > 0 ? `- Servicios: ${quoteData.selected_services.length} servicio(s)` : ''}
       ${quoteData.selected_equipment && quoteData.selected_equipment.length > 0 ? `- Equipos: ${quoteData.selected_equipment.length} equipo(s)` : ''}
       - Subtotal: $${new Intl.NumberFormat('es-CL').format(subtotal)}
-      - IVA 19%: $${new Intl.NumberFormat('es-CL').format(ivaAmount)}
+      ${discountAmount && discountAmount > 0 ? `- Descuento: - $${new Intl.NumberFormat('es-CL').format(Math.round(discountAmount))}
+      - Total después del descuento: $${new Intl.NumberFormat('es-CL').format(Math.round(totalAfterDiscount))}
+      ` : ''}- IVA 19%: $${new Intl.NumberFormat('es-CL').format(ivaAmount)}
       - Total: $${new Intl.NumberFormat('es-CL').format(totalConIva)}
+      ${subscriptionEnabled ? (subscriptionIvaIncluded ? `- Suscripción (mensual): $${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)} (IVA incluido)
+      ` : `- Suscripción (base): $${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)}
+      - IVA 19%: $${new Intl.NumberFormat('es-CL').format(Math.round(subscriptionMonthly * 0.19))}
+      - Total suscripción: $${new Intl.NumberFormat('es-CL').format(Math.round(subscriptionMonthly * 1.19))}
+      `) : ''}
       
       El PDF con los detalles completos se encuentra adjunto a este correo.
       
@@ -234,17 +355,33 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: `"Cotización IngenIT" <${process.env.EMAIL_USER || 'gerencia@ingenit.cl'}>`,
       to: recipientEmail,
-      cc: 'gerencia@ingenit.cl', // Copia interna para control
       subject: subject,
       text: textBody,
       html: htmlBody,
       attachments
     };
 
+    if (previewFlag) {
+      // Devolver previsualización sin enviar
+      return NextResponse.json({ success: true, preview: true, html: htmlBody, text: textBody });
+    }
+
     // Enviar el correo
     const info = await transporter.sendMail(mailOptions);
 
     console.log('✅ Correo enviado exitosamente:', info.messageId);
+
+    // Enviar notificación interna de control usando la ruta interna
+    try {
+      await fetch(new URL('/api/send-internal-notification', request.url).toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteData, recipientEmail: recipientEmail || quoteData.client_email, messageId: info.messageId })
+      });
+      console.log('🔔 Notificación interna solicitada');
+    } catch (notifyErr) {
+      console.warn('⚠️ No se pudo solicitar notificación interna:', notifyErr);
+    }
 
     return NextResponse.json({ 
       success: true, 

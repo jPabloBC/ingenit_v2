@@ -15,7 +15,8 @@ import {
   DollarSign,
   User,
   Download,
-  Mail
+  Mail,
+  Send
 } from "lucide-react";
 
 interface Quote {
@@ -145,13 +146,25 @@ export default function QuotesPage() {
 
   const handleEdit = (quote: Quote) => {
     // Guardar la cotización en sessionStorage para edición
-    sessionStorage.setItem('editQuoteData', JSON.stringify(quote));
+    sessionStorage.setItem('editQuoteData', JSON.stringify({
+      ...quote,
+      subscription_enabled: (quote as any).subscription_enabled ?? false,
+      subscription_monthly: (quote as any).subscription_monthly ?? 0,
+      subscription_description: (quote as any).subscription_description ?? '',
+      iva_included: (quote as any).iva_included ?? false
+    }));
     router.push(`/admin/quotes/create?edit=true&id=${quote.id}`);
   };
 
   const handleView = (quote: Quote) => {
     // Guardar la cotización en sessionStorage para visualización
-    sessionStorage.setItem('viewQuoteData', JSON.stringify(quote));
+    sessionStorage.setItem('viewQuoteData', JSON.stringify({
+      ...quote,
+      subscription_enabled: (quote as any).subscription_enabled ?? false,
+      subscription_monthly: (quote as any).subscription_monthly ?? 0,
+      subscription_description: (quote as any).subscription_description ?? '',
+      iva_included: (quote as any).iva_included ?? false
+    }));
     router.push(`/admin/quotes/create?view=true&id=${quote.id}`);
   };
 
@@ -181,6 +194,11 @@ export default function QuotesPage() {
         discount_value: quote.discount_value || 0,
         discount_description: quote.discount_description || '',
         final_total: quote.final_total || 0,
+        	// Suscripción
+        	subscription_enabled: (quote as any).subscription_enabled ?? false,
+        	subscription_monthly: (quote as any).subscription_monthly ?? 0,
+        	subscription_description: (quote as any).subscription_description ?? '',
+        	iva_included: (quote as any).iva_included ?? false,
         quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
         created_at: quote.created_at || new Date().toISOString()
       };
@@ -256,6 +274,11 @@ export default function QuotesPage() {
         discount_value: quote.discount_value || 0,
         discount_description: quote.discount_description || '',
         final_total: quote.final_total || 0,
+        	// Suscripción
+        	subscription_enabled: (quote as any).subscription_enabled ?? false,
+        	subscription_monthly: (quote as any).subscription_monthly ?? 0,
+        	subscription_description: (quote as any).subscription_description ?? '',
+        	iva_included: (quote as any).iva_included ?? false,
         quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
         created_at: quote.created_at || new Date().toISOString()
       };
@@ -285,9 +308,9 @@ export default function QuotesPage() {
         if (quote.status === 'draft') {
           console.log('🔄 Cambiando estado automáticamente de "draft" a "sent"');
           
-          try {
+            try {
             const { error } = await supabase
-              .from('quotes')
+              .from('rt_quotes')
               .update({ 
                 status: 'sent',
                 updated_at: new Date().toISOString()
@@ -320,6 +343,104 @@ export default function QuotesPage() {
       
     } catch (error) {
       console.error('❌ Error enviando correo:', error);
+      alert(`Error enviando el correo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
+  };
+
+  const handlePreviewEmail = async (quote: Quote) => {
+    try {
+      if (!quote.id) {
+        alert('No hay ID de cotización disponible para previsualizar el correo.');
+        return;
+      }
+
+      const resp = await fetch(`/api/send-quote-email?preview=true`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId: quote.id })
+      });
+
+      const data = await resp.json();
+      if (!data || !data.html) {
+        alert('No se recibió el HTML de previsualización.');
+        console.error('Preview response:', data);
+        return;
+      }
+
+      const previewWindow = window.open('', '_blank');
+      if (!previewWindow) {
+        alert('No se pudo abrir la ventana de previsualización. Revisa tu bloqueador de popups.');
+        return;
+      }
+      previewWindow.document.open();
+      previewWindow.document.write(data.html);
+      previewWindow.document.close();
+    } catch (error) {
+      console.error('Error al obtener previsualización del correo:', error);
+      alert('Error obteniendo la previsualización del correo');
+    }
+  };
+
+  const handleSendAndMark = async (quote: Quote) => {
+    try {
+      if (!quote.client_email) {
+        alert('No se puede enviar: el cliente no tiene email registrado.');
+        return;
+      }
+
+      // Preparar datos para el PDF (igual que en handleShareByEmail)
+      const pdfData = {
+        client_rut: quote.client_rut || '',
+        client_name: quote.client_name,
+        client_email: quote.client_email || '',
+        client_phone: quote.client_phone ? `${quote.client_phone_country || ''} ${quote.client_phone}` : '',
+        client_address: quote.client_address || '',
+        client_region: quote.client_region || '',
+        client_commune: quote.client_commune || '',
+        project_title: quote.project_title,
+        project_description: quote.project_description || '',
+        selected_services: quote.services || [],
+        selected_equipment: quote.equipment || [],
+        total_amount: quote.total_amount || 0,
+        equipment_total: quote.equipment_total || 0,
+        valid_until: quote.valid_until || '',
+        notes: quote.notes || '',
+        terms_conditions: quote.terms_conditions || '',
+        discount_type: quote.discount_type || 'none',
+        discount_value: quote.discount_value || 0,
+        discount_description: quote.discount_description || '',
+        final_total: quote.final_total || 0,
+        subscription_enabled: (quote as any).subscription_enabled ?? false,
+        subscription_monthly: (quote as any).subscription_monthly ?? 0,
+        subscription_description: (quote as any).subscription_description ?? '',
+        iva_included: (quote as any).iva_included ?? false,
+        quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
+        created_at: quote.created_at || new Date().toISOString()
+      };
+
+      // Enviar el PDF por correo usando la función existente
+      await sendProfessionalPDFByEmail(pdfData, quote.client_email);
+
+      // Si el envío fue exitoso, actualizar estado a 'sent' (si estaba en 'draft')
+      if (quote.status === 'draft') {
+        const { error } = await supabase
+          .from('rt_quotes')
+          .update({ status: 'sent', updated_at: new Date().toISOString() })
+          .eq('id', quote.id);
+
+        if (error) {
+          console.error('❌ Error actualizando estado tras envío:', error);
+          alert('El correo fue enviado, pero no se pudo actualizar el estado en la base de datos.');
+        } else {
+          setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, status: 'sent' } : q));
+          alert('✅ Correo enviado y cotización marcada como ENVIADA');
+        }
+      } else {
+        alert('✅ Correo enviado');
+      }
+
+    } catch (error) {
+      console.error('❌ Error en enviar y marcar:', error);
       alert(`Error enviando el correo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
@@ -671,6 +792,7 @@ export default function QuotesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-2">
             <button
                           onClick={() => handleView(quote)}
               className="text-blue8 hover:text-blue6 p-1 focus:outline-none focus:ring-0 active:outline-none"
@@ -698,6 +820,20 @@ export default function QuotesPage() {
                           title="Compartir por correo"
                         >
                           <Mail className="w-4 h-4" />
+                        </button>
+            <button
+                          onClick={() => handleSendAndMark(quote)}
+              className="text-green-600 hover:text-green-800 p-1 focus:outline-none focus:ring-0 active:outline-none"
+                          title="Enviar y marcar como enviada"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+            <button
+                          onClick={() => handlePreviewEmail(quote)}
+              className="text-indigo-600 hover:text-indigo-800 p-1 focus:outline-none focus:ring-0 active:outline-none"
+                          title="Previsualizar correo"
+                        >
+                          <Search className="w-4 h-4" />
                         </button>
                         {/* Botones de cambio de estado solo para cotizaciones enviadas */}
                         {quote.status === 'sent' && (
@@ -738,6 +874,7 @@ export default function QuotesPage() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                      </div>
                       </div>
                     </td>
                   </tr>

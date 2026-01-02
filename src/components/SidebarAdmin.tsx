@@ -9,6 +9,15 @@ import { useSidebar } from "@/contexts/SidebarContext";
 
 // Helper: Map screen_id to route and icon
 const SCREEN_CONFIG: Record<string, { route: string; label: string; icon: React.ReactNode }> = {
+    transactions: {
+        route: "/admin/transactions",
+        label: "Finanzas Personales",
+        icon: (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+        )
+    },
             print: {
                 route: "/admin/print",
                 label: "Impresión",
@@ -65,8 +74,10 @@ const SCREEN_CONFIG: Record<string, { route: string; label: string; icon: React.
         route: "/admin/pricing-library",
         label: "Biblioteca de Precios",
         icon: (
+            // Book icon to avoid duplication with the transactions icon
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20l8-4V6a2 2 0 00-2-2H6a2 2 0 00-2 2v10l8 4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12v8" />
             </svg>
         )
     },
@@ -118,6 +129,24 @@ const SCREEN_CONFIG: Record<string, { route: string; label: string; icon: React.
     },
 };
 
+// Preferred global ordering for sidebar items. Items not listed will appear afterwards alphabetically.
+const PREFERRED_ORDER = [
+    'dashboard',
+    'chat',
+    'chatbot-conversations',
+    'quotes',
+    'pricing-library',
+    'market-prices',
+    'process-tracking',
+    'whatsapp-flows',
+    'automation-leads',
+    // Finanzas Personales e Impresión deben ir abajo, antes de Configuración
+    'transactions',
+    'print',
+    'print_image',
+    'settings'
+];
+
 export default function SidebarAdmin() {
     const router = useRouter();
     const pathname = usePathname();
@@ -157,13 +186,17 @@ export default function SidebarAdmin() {
                         setUserRole(profile?.role || null);
                         if (profile?.role === 'dev') {
                             // Acceso total: incluir solo pantallas principales (no sub-screens con '_')
-                            setAllowedScreens(Object.keys(SCREEN_CONFIG)
-                                .filter(id => !id.includes('_'))
-                                .map(screen_id => ({
-                                    screen_id,
-                                    label: SCREEN_CONFIG[screen_id].label
-                                }))
-                            );
+                            // Apply preferred ordering so key screens appear before settings
+                            const allScreens = Object.keys(SCREEN_CONFIG).filter(id => !id.includes('_'));
+                            allScreens.sort((a, b) => {
+                                const ia = PREFERRED_ORDER.indexOf(a);
+                                const ib = PREFERRED_ORDER.indexOf(b);
+                                if (ia === -1 && ib === -1) return a.localeCompare(b);
+                                if (ia === -1) return 1;
+                                if (ib === -1) return -1;
+                                return ia - ib;
+                            });
+                            setAllowedScreens(allScreens.map(screen_id => ({ screen_id, label: SCREEN_CONFIG[screen_id].label })));
                             setIsAuthenticated(true);
                             setIsLoading(false);
                             return;
@@ -193,6 +226,15 @@ export default function SidebarAdmin() {
                             }))
                             // Asegurar que la screen exista en SCREEN_CONFIG y no sea una sub-screen independiente
                             .filter(s => SCREEN_CONFIG[s.screen_id] && !s.screen_id.includes('_'));
+                        // Apply global preferred ordering
+                        allowed.sort((a, b) => {
+                            const ia = PREFERRED_ORDER.indexOf(a.screen_id);
+                            const ib = PREFERRED_ORDER.indexOf(b.screen_id);
+                            if (ia === -1 && ib === -1) return a.label.localeCompare(b.label);
+                            if (ia === -1) return 1;
+                            if (ib === -1) return -1;
+                            return ia - ib;
+                        });
                         console.log('Screens permitidas (allowedScreens):', allowed);
                         setAllowedScreens(allowed);
                         setIsAuthenticated(true);
@@ -208,13 +250,17 @@ export default function SidebarAdmin() {
                             const userData = JSON.parse(adminUser);
                             if (userData.email && userData.role) {
                                 setUserRole(userData.role);
-                                setAllowedScreens(Object.keys(SCREEN_CONFIG)
-                                    .filter(id => !id.includes('_'))
-                                    .map(screen_id => ({
-                                        screen_id,
-                                        label: SCREEN_CONFIG[screen_id].label
-                                    }))
-                                );
+                                // Apply same preferred ordering for fallback
+                                const allScreens = Object.keys(SCREEN_CONFIG).filter(id => !id.includes('_'));
+                                allScreens.sort((a, b) => {
+                                    const ia = PREFERRED_ORDER.indexOf(a);
+                                    const ib = PREFERRED_ORDER.indexOf(b);
+                                    if (ia === -1 && ib === -1) return a.localeCompare(b);
+                                    if (ia === -1) return 1;
+                                    if (ib === -1) return -1;
+                                    return ia - ib;
+                                });
+                                setAllowedScreens(allScreens.map(screen_id => ({ screen_id, label: SCREEN_CONFIG[screen_id].label })));
                                 setIsAuthenticated(true);
                             } else {
                                 router.push("/admin/login");
@@ -271,7 +317,7 @@ export default function SidebarAdmin() {
             {/* Botón hamburguesa para pantallas pequeñas */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed top-4 right-4 z-50 bg-blue8 text-white p-3 rounded-full shadow-lg hover:bg-blue6 transition-all duration-200 lg:hidden"
+                className="fixed top-4 right-4 z-[50] bg-blue8 text-white p-3 rounded-full shadow-lg hover:bg-blue6 transition-all duration-200 lg:hidden"
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -330,6 +376,7 @@ export default function SidebarAdmin() {
                         }
                     `}</style>
                     <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
+                        {/* Render allowed screens normalmente */}
                         {allowedScreens.map(screen => {
                             const config = SCREEN_CONFIG[screen.screen_id];
                             if (!config) return null;
@@ -389,6 +436,22 @@ export default function SidebarAdmin() {
                                 </div>
                             );
                         })}
+                        {/* Asegurar que el enlace a Finanzas Personales siempre esté visible */}
+                        {!allowedScreens.some(s => s.screen_id === 'transactions') && (
+                            <button
+                                onClick={() => {
+                                    router.push(SCREEN_CONFIG.transactions.route);
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-gray8 hover:text-blue5 hover:bg-gray6 rounded transition-all duration-200 font-medium ${
+                                    isCollapsed ? 'justify-center' : ''
+                                }`}
+                                title={SCREEN_CONFIG.transactions.label}
+                            >
+                                {SCREEN_CONFIG.transactions.icon}
+                                {!isCollapsed && <span className="truncate text-left">{SCREEN_CONFIG.transactions.label}</span>}
+                            </button>
+                        )}
                     </nav>
 
                     {/* Logout */}

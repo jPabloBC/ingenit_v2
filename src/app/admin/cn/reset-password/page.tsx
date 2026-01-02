@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
-export default function ResetPassword() {
+export default function ResetPasswordCN() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +16,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Comprobar que hay token de restablecimiento personalizado en la URL
-    const t = searchParams.get('token');
+    const t = searchParams?.get('token');
     if (!t) {
       setError('Enlace de restablecimiento inválido');
       return;
@@ -43,7 +43,7 @@ export default function ResetPassword() {
     }
 
     try {
-      const token = searchParams.get('token');
+      const token = searchParams?.get('token');
       if (!token) {
         setError('Token de restablecimiento no proporcionado');
         setIsLoading(false);
@@ -76,10 +76,10 @@ export default function ResetPassword() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-title text-gray-900 mb-2">
-            Restablecer Contraseña
+            Restablecer Contraseña CN
           </h1>
           <p className="text-gray-600">
-            Establece tu nueva contraseña segura
+            Establece tu nueva contraseña segura para CN
           </p>
         </div>
 
@@ -95,14 +95,21 @@ export default function ResetPassword() {
             {success && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <p className="text-green-600 text-sm">{success}</p>
-                <p className="text-green-600 text-xs mt-2">Pulsa el botón para ir al login si lo deseas.</p>
+                <p className="text-green-600 text-xs mt-2">Pulsa el botón para abrir la aplicación CN.</p>
                 <div className="mt-3 text-center">
                   <button
                     type="button"
-                    onClick={() => router.push('/admin/login')}
+                    onClick={() => {
+                      try {
+                        window.open('https://cn.ingenit.cl', '_blank');
+                      } catch (e) {}
+                      try {
+                        window.close();
+                      } catch (e) {}
+                    }}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
                   >
-                    Ir al login
+                    Abrir CN
                   </button>
                 </div>
               </div>
@@ -185,13 +192,7 @@ export default function ResetPassword() {
             </button>
 
             <div className="text-center">
-              <button
-                type="button"
-                onClick={() => router.push("/admin/login")}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
-              >
-                Volver al login
-              </button>
+              {/* Botón de volver al login eliminado para app de escritorio */}
             </div>
           </form>
 
@@ -211,8 +212,9 @@ export default function ResetPassword() {
           <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-200">
             <h3 className="text-sm font-semibold text-green-800 mb-2">¿Qué pasa después?</h3>
             <p className="text-xs text-green-700">
-              Una vez que actualices tu contraseña, serás redirigido al login para iniciar sesión 
-              con tu nueva contraseña. El enlace de restablecimiento ya no será válido.
+              Después de actualizar la contraseña se mostrará un mensaje de éxito; la ventana
+              intentará cerrarse y se abrirá la aplicación de escritorio CN en cn.ingenit.cl.
+              El enlace de restablecimiento ya no será válido.
             </p>
           </div>
         </div>
@@ -220,10 +222,10 @@ export default function ResetPassword() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 IngenIT ® - Panel de Administración
+            © 2025 IngenIT ® - Panel de Administración CN
           </p>
         </div>
       </div>
     </div>
   );
-} 
+}
