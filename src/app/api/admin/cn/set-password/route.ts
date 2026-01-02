@@ -13,34 +13,46 @@ const supabaseAdmin = createClient(SUPABASE_URL || '', SERVICE_ROLE_KEY || '', {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { token, password } = body;
-    if (!token || !password) return NextResponse.json({ error: 'Missing token or password' }, { status: 400 });
-
-    // lookup token
-    const { data: rows, error: rowErr } = await supabaseAdmin
-      .from('cn_password_resets')
-      .select('token,user_id,expires_at')
-      .eq('token', token)
-      .limit(1)
-      .single();
-
-    if (rowErr || !rows) return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
-
-    const expiresAt = new Date(rows.expires_at);
-    if (expiresAt.getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Token expired' }, { status: 400 });
+    const { token, password, email } = body;
+    
+    if (!token || !password) {
+      return NextResponse.json({ error: 'Missing token or password' }, { status: 400 });
     }
-
-    const userId = rows.user_id;
 
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
       console.error('Server missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
       return NextResponse.json({ error: 'Server configuration error: missing Supabase admin credentials' }, { status: 500 });
     }
 
-    // Attempt to update password via Supabase Admin API
+    // Verify the recovery token with Supabase Auth
+    let userId: string | null = null;
+    let userEmail: string | null = email || null;
+
     try {
-      // supabase-js may not expose updateUserById; use admin REST endpoint
+      // Exchange recovery token for a session to get user ID
+      const { data: session, error: sessionError } = await supabaseAdmin.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery'
+      });
+
+      if (sessionError || !session?.user?.id) {
+        console.warn('Token verification failed:', sessionError);
+        return NextResponse.json({ error: 'Invalid or expired recovery token' }, { status: 400 });
+      }
+
+      userId = session.user.id;
+      userEmail = session.user.email || userEmail;
+    } catch (e) {
+      console.error('Exception during token verification:', e);
+      return NextResponse.json({ error: 'Failed to verify recovery token' }, { status: 400 });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Could not extract user ID from token' }, { status: 400 });
+    }
+
+    // Update password via Supabase Admin API
+    try {
       const res = await fetch(`${SUPABASE_URL.replace(/\/+$/, '')}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
         method: 'PUT',
         headers: {
@@ -54,21 +66,18 @@ export async function POST(request: Request) {
       const resBody = await res.json().catch(() => null);
       if (!res.ok) {
         console.error('Failed to set password via admin API', { status: res.status, body: resBody });
-        return NextResponse.json({ error: 'Failed to set password via Supabase admin API', status: res.status, detail: resBody || null }, { status: 500 });
+        return NextResponse.json({ 
+          error: 'Failed to set password via Supabase admin API', 
+          status: res.status, 
+          detail: resBody || null 
+        }, { status: 500 });
       }
     } catch (e) {
       console.error('Exception setting password', e);
       return NextResponse.json({ error: 'Failed to set password' }, { status: 500 });
     }
 
-    // delete used token
-    try {
-      await supabaseAdmin.from('cn_password_resets').delete().eq('token', token);
-    } catch (delErr) {
-      console.warn('Failed to delete used password reset token', delErr);
-    }
-
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, user_id: userId, email: userEmail });
   } catch (err) {
     console.error('Unexpected set-password error', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
