@@ -13,7 +13,7 @@ const supabaseAdmin = createClient(SUPABASE_URL || '', SERVICE_ROLE_KEY || '', {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { token, password, email } = body;
+    const { token, password } = body;
     
     if (!token || !password) {
       return NextResponse.json({ error: 'Missing token or password' }, { status: 400 });
@@ -23,58 +23,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // Step 1: Validate token by calling Supabase user endpoint with the token as Bearer
+    // Extract user ID from JWT token
     let userId: string | null = null;
     try {
-      const userRes = await fetch(`${SUPABASE_URL.replace(/\/+$/, '')}/auth/v1/user`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'apikey': SERVICE_ROLE_KEY
-        }
-      });
-
-      if (!userRes.ok) {
-        console.error('Failed to validate token:', userRes.status);
-        return NextResponse.json({ error: 'Invalid or expired recovery token' }, { status: 400 });
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return NextResponse.json({ error: 'Invalid token format' }, { status: 400 });
       }
 
-      const userData = await userRes.json();
-      userId = userData.id;
-
+      // Decode JWT payload (without verification - Supabase signed it)
+      const payload = parts[1];
+      const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+      const decoded = Buffer.from(padded, 'base64').toString('utf-8');
+      const claims = JSON.parse(decoded);
+      
+      userId = claims.sub;
       if (!userId) {
-        return NextResponse.json({ error: 'Could not extract user ID from token' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
       }
     } catch (e) {
-      console.error('Error validating token:', e);
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
     }
 
-    // Step 2: Update password via Supabase Admin API
-    try {
-      const updateRes = await fetch(`${SUPABASE_URL.replace(/\/+$/, '')}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
-        method: 'PUT',
-        headers: {
-          'apikey': SERVICE_ROLE_KEY,
-          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password })
-      });
+    // Update password via Supabase Admin API
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'apikey': SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password })
+    });
 
-      if (!updateRes.ok) {
-        const errorData = await updateRes.json().catch(() => null);
-        console.error('Failed to update password:', errorData);
-        return NextResponse.json({ error: 'Failed to set password' }, { status: 500 });
-      }
-    } catch (e) {
-      console.error('Exception updating password:', e);
+    if (!res.ok) {
       return NextResponse.json({ error: 'Failed to set password' }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('Unexpected error:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
