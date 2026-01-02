@@ -24,32 +24,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Server configuration error: missing Supabase admin credentials' }, { status: 500 });
     }
 
-    // Verify the recovery token with Supabase Auth
-    let userId: string | null = null;
-    let userEmail: string | null = email || null;
+    // Create a Supabase client with the recovery token as the session
+    const supabaseUser = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      auth: { persistSession: false }
+    });
 
-    try {
-      // Exchange recovery token for a session to get user ID
-      const { data: session, error: sessionError } = await supabaseAdmin.auth.verifyOtp({
-        token_hash: token,
-        type: 'recovery'
-      });
+    // Set the session with the recovery token
+    const { error: setSessionError } = await supabaseUser.auth.setSession({
+      access_token: token,
+      refresh_token: ''
+    });
 
-      if (sessionError || !session?.user?.id) {
-        console.warn('Token verification failed:', sessionError);
-        return NextResponse.json({ error: 'Invalid or expired recovery token' }, { status: 400 });
-      }
-
-      userId = session.user.id;
-      userEmail = session.user.email || userEmail;
-    } catch (e) {
-      console.error('Exception during token verification:', e);
-      return NextResponse.json({ error: 'Failed to verify recovery token' }, { status: 400 });
+    if (setSessionError) {
+      console.warn('Failed to set session from recovery token:', setSessionError);
+      return NextResponse.json({ error: 'Invalid recovery token' }, { status: 400 });
     }
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Could not extract user ID from token' }, { status: 400 });
+    // Get the authenticated user
+    const { data: { user }, error: getUserError } = await supabaseUser.auth.getUser(token);
+
+    if (getUserError || !user?.id) {
+      console.warn('Could not get user from recovery token:', getUserError);
+      return NextResponse.json({ error: 'Invalid or expired recovery token' }, { status: 400 });
     }
+
+    const userId = user.id;
+    const userEmail = user.email || email;
 
     // Update password via Supabase Admin API
     try {
