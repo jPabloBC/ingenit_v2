@@ -175,9 +175,8 @@ export async function POST(request: Request) {
     // Use Supabase's resetPasswordForEmail to generate valid recovery tokens
     try {
       const base = process.env.CN_BASE_URL || 'https://cn.ingenit.cl';
-      const encodedEmail = encodeURIComponent(body.email);
       const { error: resetErr } = await supabaseAdmin.auth.resetPasswordForEmail(body.email, {
-        redirectTo: `${base.replace(/\/$/, '')}/reset.html?email=${encodedEmail}`
+        redirectTo: `${base.replace(/\/$/, '')}/reset.html`
       });
       
       if (resetErr) {
