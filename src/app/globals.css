@@ -3,190 +3,194 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--background: #ffffff;
+	--foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+	:root {
+		--background: #0a0a0a;
+		--foreground: #ededed;
+	}
 }
 
 body {
-  @apply bg-white text-gray2 font-body antialiased;
-  scroll-behavior: smooth;
+	@apply bg-white text-gray2 font-body antialiased;
+	scroll-behavior: smooth;
 }
 
 /* Smooth scrolling for anchor links */
 html {
-  scroll-behavior: smooth;
+	scroll-behavior: smooth;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+	width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+	background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+	background: #c1c1c1;
+	border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+	background: #a8a8a8;
 }
 
 /* Focus styles - removed outline, keeping only hover effects */
 *:focus {
-  outline: none;
+	outline: none;
 }
 
 /* Button hover effects */
 .btn-primary {
-  @apply bg-blue6 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1;
+	@apply bg-blue6 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1;
 }
 
 .btn-secondary {
-  @apply border-2 border-blue6 text-blue6 px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-blue6 hover:text-white;
+	@apply border-2 border-blue6 text-blue6 px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-blue6 hover:text-white;
 }
 
 /* Card hover effects */
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
+	@apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2;
 }
 
 /* Text gradient effect */
 .text-gradient {
-  background: linear-gradient(135deg, #005abf 0%, #003366 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+	background: linear-gradient(135deg, #005abf 0%, #003366 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
 
 /* Animation classes */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+	animation: fadeInUp 0.6s ease-out;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.6s ease-out;
+	animation: fadeIn 0.6s ease-out;
 }
 
 /* Responsive chat bot adjustments */
 @media (max-width: 480px) {
-  .custom-datepicker-popper {
-    max-width: 95vw;
-    z-index: 99999 !important;
-    background: #fff;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
-    /* Forzar centrado horizontal en pantalla y desplazar a la derecha +80px */
-    position: fixed !important;
-    left: 50% !important;
-    transform: translateX(calc(-50% + 80px)) !important;
-    top: auto !important;
-  }
+	.custom-datepicker-popper {
+		max-width: 95vw;
+		z-index: 99999;
+		background: #fff;
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+		/* Forzar centrado horizontal en pantalla y desplazar a la derecha +80px */
+		position: fixed;
+		left: 50%;
+		transform: translateX(calc(-50% + 80px));
+		top: auto;
+	}
 
-
-/* Borde visible para depuración: activarse cuando esté presente */
-.custom-datepicker-popper.debug-visible {
-  outline: 3px solid rgba(220,38,38,0.95) !important;
-}
-  #chat-bot-toggle {
-    right: 2.5% !important;
-    bottom: 20px !important;
-  }
+	/* Borde visible para depuración: activarse cuando esté presente */
+	.custom-datepicker-popper.debug-visible {
+		outline: 3px solid rgba(220, 38, 38, 0.95);
+	}
+	#chat-bot-toggle {
+		right: 2.5%;
+		bottom: 20px;
+	}
 }
 
 /* Loading states */
 .loading {
-  @apply animate-pulse bg-gray-200 rounded;
+	@apply animate-pulse bg-gray-200 rounded;
 }
 
 /* Custom selection color */
 ::selection {
-  background-color: #005abf;
-  color: white;
+	background-color: #005abf;
+	color: white;
 }
 
 /* Improved focus for form elements - subtle styling */
 input:focus,
 textarea:focus,
 select:focus {
-  @apply ring-1 ring-blue6 ring-opacity-30 border-blue6;
+	@apply ring-1 ring-blue6 ring-opacity-30 border-blue6;
 }
 
 /* Smooth transitions for all interactive elements */
 * {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+	transition-property:
+		color, background-color, border-color, text-decoration-color, fill, stroke,
+		opacity, box-shadow, transform, filter, backdrop-filter;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
 }
 
 /* ========================================
    GLOBAL ROUNDED CORNERS SYSTEM
    ======================================== */
 
-/* Redondeo global uniforme y sutil para toda la aplicación */
+/* Redondeo global uniforme y más sobrio para toda la aplicación */
 .dashboard-card,
 .project-card,
 button,
 .bg-white,
 .card,
 .panel {
-  border-radius: 0.375rem; /* 6px - rounded-md */
+	border-radius: 0.3125rem; /* 5px */
 }
 
-/* Redondeo más pronunciado para elementos principales */
+/* Escala de radios global reducida */
+.rounded-3xl {
+	border-radius: 0.875rem; /* 14px */
+}
+
 .rounded-xl {
-  border-radius: 0.75rem; /* 12px */
+	border-radius: 0.625rem; /* 10px */
 }
 
 .rounded-2xl {
-  border-radius: 1rem; /* 16px */
+	border-radius: 0.75rem; /* 12px */
 }
 
-/* Redondeo sutil para elementos pequeños */
 .rounded-lg {
-  border-radius: 0.5rem; /* 8px */
+	border-radius: 0.5rem; /* 8px */
 }
 
 .rounded-md {
-  border-radius: 0.375rem; /* 6px - redondeo más sutil */
+	border-radius: 0.375rem; /* 6px */
 }
 
 .rounded-sm {
-  border-radius: 0.25rem; /* 4px */
+	border-radius: 0.25rem; /* 4px */
 }
 
 /* Redondeo para iconos y elementos circulares */
 .rounded-full {
-  border-radius: 9999px;
+	border-radius: 9999px;
 }
 
 /* Redondeo uniforme para elementos específicos del dashboard */
@@ -195,38 +199,38 @@ button,
 .bg-gray-50,
 .mobile-button,
 .mobile-icon-container {
-  border-radius: 0.375rem; /* 6px - rounded-md */
+	border-radius: 0.3125rem; /* 5px */
 }
 
 /* Redondeo para elementos de información del sistema */
 .flex.justify-between {
-  border-radius: 0.25rem;
-  padding: 0.25rem 0;
+	border-radius: 0.25rem;
+	padding: 0.25rem 0;
 }
 
 /* Asegurar redondeo en elementos del dashboard */
 .dashboard-transition,
 .dashboard-transition * {
-  border-radius: inherit;
+	border-radius: inherit;
 }
 
 /* Responsive design para redondeo */
 @media (max-width: 640px) {
-  .dashboard-card,
-  .project-card,
-  button,
-  .bg-white {
-    border-radius: 0.25rem; /* 4px - más sutil en móviles */
-  }
+	.dashboard-card,
+	.project-card,
+	button,
+	.bg-white {
+		border-radius: 0.25rem; /* 4px */
+	}
 }
 
 @media (min-width: 1025px) {
-  .dashboard-card,
-  .project-card,
-  button,
-  .bg-white {
-    border-radius: 0.5rem; /* 8px - más pronunciado en desktop */
-  }
+	.dashboard-card,
+	.project-card,
+	button,
+	.bg-white {
+		border-radius: 0.375rem; /* 6px */
+	}
 }
 
 /* ========================================
@@ -235,139 +239,139 @@ button,
 
 /* Animaciones suaves para el dashboard */
 .dashboard-transition {
-  transition: all 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 .dashboard-text {
-  line-height: 1.4;
+	line-height: 1.4;
 }
 
 /* Efectos para tarjetas del dashboard */
 .dashboard-card {
-  transition: all 0.2s ease;
+	transition: all 0.2s ease;
 }
 
 .dashboard-card:active {
-  transform: scale(0.98);
+	transform: scale(0.98);
 }
 
 /* Efectos para botones móviles */
 .mobile-button {
-  padding: 0.625rem 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+	padding: 0.625rem 0.75rem;
+	font-weight: 500;
+	transition: all 0.2s ease;
 }
 
 .mobile-button:active {
-  background-color: #f3f4f6;
-  transform: scale(0.95);
+	background-color: #f3f4f6;
+	transform: scale(0.95);
 }
 
 /* Iconos móviles */
 .mobile-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+	width: 1.5rem;
+	height: 1.5rem;
 }
 
 .mobile-icon-container {
-  padding: 0.5rem;
+	padding: 0.5rem;
 }
 
 /* Efectos para tarjetas de proyectos */
 .project-card {
-  transition: all 0.2s ease;
-  cursor: pointer;
+	transition: all 0.2s ease;
+	cursor: pointer;
 }
 
 .project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .project-card:active {
-  transform: translateY(0);
+	transform: translateY(0);
 }
 
 .project-card:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
+	outline: 2px solid #3b82f6;
+	outline-offset: 2px;
 }
 
 /* Iconos de proyectos */
 .project-icon {
-  transition: transform 0.2s ease;
+	transition: transform 0.2s ease;
 }
 
 .project-card:hover .project-icon {
-  transform: scale(1.1);
+	transform: scale(1.1);
 }
 
 /* Responsive para proyectos */
 @media (max-width: 640px) {
-  .project-card {
-    padding: 0.75rem;
-  }
-  
-  .project-card h3 {
-    font-size: 0.875rem;
-  }
-  
-  .project-card p {
-    font-size: 0.75rem;
-  }
+	.project-card {
+		padding: 0.75rem;
+	}
+
+	.project-card h3 {
+		font-size: 0.875rem;
+	}
+
+	.project-card p {
+		font-size: 0.75rem;
+	}
 }
 
 /* Efectos de gradiente para proyectos */
 .project-gradient-blue {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+	background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
 }
 
 .project-gradient-green {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+	background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
 }
 
 .project-gradient-red {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+	background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
 }
 
 .project-gradient-purple {
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+	background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
 }
 
 .project-gradient-orange {
-  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+	background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
 }
 
 /* Optimizaciones para dispositivos táctiles */
 @media (hover: none) {
-  .touch-optimized:hover {
-    background-color: transparent;
-  }
-  
-  .touch-optimized:active {
-    background-color: #f3f4f6;
-  }
+	.touch-optimized:hover {
+		background-color: transparent;
+	}
+
+	.touch-optimized:active {
+		background-color: #f3f4f6;
+	}
 }
 
 /* Accesibilidad */
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-transition,
-  .dashboard-card,
-  .mobile-button,
-  .project-card,
-  .project-icon,
-  .conversation-transition,
-  .conversation-list-item {
-    transition: none;
-  }
-  
-  .dashboard-card:active,
-  .mobile-button:active,
-  .project-card:hover,
-  .project-card:active,
-  .conversation-list-item:active {
-    transform: none;
-  }
+	.dashboard-transition,
+	.dashboard-card,
+	.mobile-button,
+	.project-card,
+	.project-icon,
+	.conversation-transition,
+	.conversation-list-item {
+		transition: none;
+	}
+
+	.dashboard-card:active,
+	.mobile-button:active,
+	.project-card:hover,
+	.project-card:active,
+	.conversation-list-item:active {
+		transform: none;
+	}
 }
 
 /* ========================================
@@ -376,69 +380,69 @@ button,
 
 /* Efectos para conversaciones */
 .conversation-list-item {
-  transition: all 0.2s ease;
+	transition: all 0.2s ease;
 }
 
 .conversation-list-item:active {
-  background-color: #f3f4f6;
-  transform: scale(0.98);
+	background-color: #f3f4f6;
+	transform: scale(0.98);
 }
 
 /* Mejorar el scroll en móviles */
 .messages-container {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+	-webkit-overflow-scrolling: touch;
+	scroll-behavior: smooth;
 }
 
 /* Optimizar el tamaño de los mensajes */
 .message-bubble {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 /* Mejorar la legibilidad del texto */
 .message-text {
-  line-height: 1.4;
+	line-height: 1.4;
 }
 
 /* Optimizar el espaciado en móviles */
 .mobile-optimized-spacing {
-  padding: 0.75rem;
+	padding: 0.75rem;
 }
 
 /* Mejorar la navegación en móviles */
 .mobile-back-button {
-  padding: 0.5rem 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+	padding: 0.5rem 0.75rem;
+	font-weight: 500;
+	transition: all 0.2s ease;
 }
 
 .mobile-back-button:active {
-  background-color: #dbeafe;
-  transform: scale(0.95);
+	background-color: #dbeafe;
+	transform: scale(0.95);
 }
 
 /* Animaciones suaves para conversaciones */
 .conversation-transition {
-  transition: all 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 /* Responsive para conversaciones */
 @media (min-width: 641px) and (max-width: 1024px) {
-  .tablet-optimized-grid {
-    grid-template-columns: 1fr 2fr;
-  }
+	.tablet-optimized-grid {
+		grid-template-columns: 1fr 2fr;
+	}
 }
 
 /* Optimizaciones para pantallas muy pequeñas */
 @media (max-width: 375px) {
-  .xs-screen-optimized {
-    padding: 0.5rem;
-  }
-  
-  .xs-screen-text {
-    font-size: 0.75rem;
-  }
+	.xs-screen-optimized {
+		padding: 0.5rem;
+	}
+
+	.xs-screen-text {
+		font-size: 0.75rem;
+	}
 }
 
 /* Date input styling for mobile Chrome (WebKit) --------------------------------------------------
@@ -452,67 +456,67 @@ button,
    para permitir que el contenedor portal (render en body) controle la posición
    cuando lo calculemos desde JS. Sólo limitamos ancho y mejoramos visibilidad. */
 @media (max-width: 640px) {
-  .custom-datepicker-popper {
-    max-width: 95vw;
-    z-index: 9999;
-    background: #fff;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
-  }
+	.custom-datepicker-popper {
+		max-width: 95vw;
+		z-index: 9999;
+		background: #fff;
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+	}
 
-  /* DEBUG: borde rojo para verificar que .custom-datepicker-popper recibe estilos */
-  .custom-datepicker-popper.debug-visible {
-    outline: 3px solid rgba(220,38,38,0.9) !important;
-  }
+	/* DEBUG: borde rojo para verificar que .custom-datepicker-popper recibe estilos */
+	.custom-datepicker-popper.debug-visible {
+		outline: 3px solid rgba(220, 38, 38, 0.9);
+	}
 }
 
 /* Wrapper and inner rules to force the calendar centered on screen in mobiles */
 @media (max-width: 640px) {
-  .mobile-centered-datepicker {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    pointer-events: auto;
-  }
-  .mobile-centered-datepicker .mobile-centered-inner {
-    width: 100%;
-    max-width: 95vw;
-  }
-  /* Force the react-datepicker element inside the wrapper to be static and centered */
-  .mobile-centered-datepicker .mobile-centered-inner .react-datepicker {
-    position: static !important;
-    left: auto !important;
-    transform: none !important;
-    margin: 0 auto !important;
-  }
+	.mobile-centered-datepicker {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		pointer-events: auto;
+	}
+	.mobile-centered-datepicker .mobile-centered-inner {
+		width: 100%;
+		max-width: 95vw;
+	}
+	/* Force the react-datepicker element inside the wrapper to be static and centered */
+	.mobile-centered-datepicker .mobile-centered-inner .react-datepicker {
+		position: static;
+		left: auto;
+		transform: none;
+		margin: 0 auto;
+	}
 }
 
 /* Reforzar centrado absoluto del wrapper y forzar ancho del datepicker interno */
 @media (max-width: 640px) {
-  .mobile-centered-datepicker {
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    position: fixed !important;
-    box-sizing: border-box !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 95vw !important;
-    max-width: 95vw !important;
-    z-index: 99999 !important;
-  }
-  .mobile-centered-datepicker .mobile-centered-inner .react-datepicker {
-    width: 100% !important;
-    max-width: 100% !important;
-    left: 0 !important;
-    transform: none !important;
-    position: relative !important;
-  }
+	.mobile-centered-datepicker {
+		left: 50%;
+		transform: translateX(-50%);
+		position: fixed;
+		box-sizing: border-box;
+		padding: 0;
+		margin: 0;
+		width: 95vw;
+		max-width: 95vw;
+		z-index: 99999;
+	}
+	.mobile-centered-datepicker .mobile-centered-inner .react-datepicker {
+		width: 100%;
+		max-width: 100%;
+		left: 0;
+		transform: none;
+		position: relative;
+	}
 }
 /* Estilos específicos para el input de fecha con clase 'date-input' */
 .date-input {
-  color: #ef4444 !important;
-  background: inherit;
-  font-size: inherit;
-  text-align: center;
+	color: #ef4444;
+	background: inherit;
+	font-size: inherit;
+	text-align: center;
 }
 
 .date-input::-webkit-datetime-edit,
@@ -520,26 +524,26 @@ button,
 .date-input::-webkit-datetime-edit-year-field,
 .date-input::-webkit-datetime-edit-month-field,
 .date-input::-webkit-datetime-edit-day-field {
-  color: #ef4444 !important;
-  -webkit-text-fill-color: #ef4444 !important;
+	color: #ef4444;
+	-webkit-text-fill-color: #ef4444;
 }
 
 .date-input::-webkit-input-placeholder {
-  color: #ef4444 !important;
+	color: #ef4444;
 }
 .date-input::placeholder {
-  color: #ef4444 !important;
+	color: #ef4444;
 }
 .date-input::-moz-placeholder {
-  color: #ef4444 !important;
-  opacity: 1;
+	color: #ef4444;
+	opacity: 1;
 }
 .date-input::-ms-input-placeholder {
-  color: #ef4444 !important;
-  opacity: 1;
+	color: #ef4444;
+	opacity: 1;
 }
 input[type="date"] {
-  color: #ef4444; /* fallback for browsers that don't support the pseudo-elements */
+	color: #ef4444; /* fallback for browsers that don't support the pseudo-elements */
 }
 
 input[type="date"]::-webkit-datetime-edit,
@@ -547,14 +551,13 @@ input[type="date"]::-webkit-datetime-edit-field,
 input[type="date"]::-webkit-datetime-edit-year-field,
 input[type="date"]::-webkit-datetime-edit-month-field,
 input[type="date"]::-webkit-datetime-edit-day-field {
-  color: #ef4444;
-  -webkit-text-fill-color: #ef4444; /* forces the visible text color on mobile Chrome */
+	color: #ef4444;
+	-webkit-text-fill-color: #ef4444; /* forces the visible text color on mobile Chrome */
 }
 
 /* Keep the native calendar icon but ensure it remains visible/contrasted. If you
    want to color the icon, consider using `filter` or hide it and use a custom
    button. We keep native appearance to preserve UX on mobile. */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 1;
+	opacity: 1;
 }
-

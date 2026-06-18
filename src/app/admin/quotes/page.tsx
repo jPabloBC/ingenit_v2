@@ -46,6 +46,9 @@ interface Quote {
   discount_value?: number;
   discount_description?: string;
   final_total?: number;
+  subscription_monthly?: number;
+  quote_type?: "one_time" | "monthly_recurring" | "mixed";
+  pricing_breakdown?: Record<string, any> | null;
 }
 
 export default function QuotesPage() {
@@ -101,25 +104,34 @@ export default function QuotesPage() {
   const loadQuotes = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("rt_quotes")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setQuotes(data || []);
+      const response = await fetch("/api/admin/quotes", {
+        cache: "no-store",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "No se pudieron cargar las cotizaciones");
+      }
+      setQuotes(payload.quotes || []);
+      if (payload.statistics) {
+        setStatistics(payload.statistics);
+      }
     } catch (error) {
       console.error("Error cargando cotizaciones:", error);
+      setQuotes([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const normalizeStatus = (status: string) => String(status || "").trim().toLowerCase();
+
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const normalized = normalizeStatus(status);
+    switch (normalized) {
+      case 'created': return 'bg-gray-200 text-gray-700 border border-gray-300';
       case 'draft': return 'bg-gray-200 text-gray-700 border border-gray-300';
       case 'sent': return 'bg-blue-200 text-blue-800 border border-blue-300';
-      case 'accepted': return 'bg-green-200 text-green-800 border border-green-300';
+      case 'accepted': return 'bg-green-800 text-white border border-green-900';
       case 'rejected': return 'bg-red-200 text-red-800 border border-red-300';
       case 'expired': return 'bg-yellow-200 text-yellow-800 border border-yellow-300';
       default: return 'bg-gray-200 text-gray-700 border border-gray-300';
@@ -127,7 +139,8 @@ export default function QuotesPage() {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (normalizeStatus(status)) {
+      case 'created': return 'Creada';
       case 'draft': return 'Borrador';
       case 'sent': return 'Enviada';
       case 'accepted': return 'Aceptada';
@@ -137,6 +150,18 @@ export default function QuotesPage() {
     }
   };
 
+  const getStatusInlineStyle = (status: string): React.CSSProperties | undefined => {
+    const normalized = normalizeStatus(status);
+    if (normalized === "accepted") {
+      return {
+        backgroundColor: "#166534", // green-800
+        color: "#ffffff",
+        borderColor: "#14532d", // green-900
+      };
+    }
+    return undefined;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
@@ -144,27 +169,48 @@ export default function QuotesPage() {
     }).format(amount);
   };
 
+  const getDisplayedAmount = (quote: Quote) => {
+    const oneTime = Number(quote.total_amount || 0);
+    if (oneTime > 0) return oneTime;
+    const fromSummary = Number((quote.pricing_breakdown as any)?.quote_summary?.monthly_final_total || 0);
+    if (fromSummary > 0) return fromSummary;
+    const monthly = Number(quote.subscription_monthly || 0);
+    if (monthly > 0) return monthly;
+    return 0;
+  };
+
+  const getDisplayDate = (quote: Quote) => {
+    const createdAtRaw = quote.created_at;
+    if (createdAtRaw) {
+      const parsed = new Date(createdAtRaw);
+      if (!Number.isNaN(parsed.getTime()) && parsed.getFullYear() > 2000) {
+        return parsed.toLocaleDateString("es-CL");
+      }
+    }
+
+    const quoteNumber = String(quote.quote_number || "");
+    const match = quoteNumber.match(/-(\d{4})(\d{2})(\d{2})$/);
+    if (match) {
+      const [, y, m, d] = match;
+      return `${d}-${m}-${y}`;
+    }
+
+    return "—";
+  };
+
   const handleEdit = (quote: Quote) => {
-    // Guardar la cotización en sessionStorage para edición
-    sessionStorage.setItem('editQuoteData', JSON.stringify({
-      ...quote,
-      subscription_enabled: (quote as any).subscription_enabled ?? false,
-      subscription_monthly: (quote as any).subscription_monthly ?? 0,
-      subscription_description: (quote as any).subscription_description ?? '',
-      iva_included: (quote as any).iva_included ?? false
-    }));
+    // Forzar carga por ID desde DB para evitar mezclar datos entre cotizaciones
+    sessionStorage.removeItem("editQuoteData");
+    sessionStorage.removeItem("viewQuoteData");
+    sessionStorage.removeItem("quoteFormData");
     router.push(`/admin/quotes/create?edit=true&id=${quote.id}`);
   };
 
   const handleView = (quote: Quote) => {
-    // Guardar la cotización en sessionStorage para visualización
-    sessionStorage.setItem('viewQuoteData', JSON.stringify({
-      ...quote,
-      subscription_enabled: (quote as any).subscription_enabled ?? false,
-      subscription_monthly: (quote as any).subscription_monthly ?? 0,
-      subscription_description: (quote as any).subscription_description ?? '',
-      iva_included: (quote as any).iva_included ?? false
-    }));
+    // Forzar carga por ID desde DB para evitar mezclar datos entre cotizaciones
+    sessionStorage.removeItem("editQuoteData");
+    sessionStorage.removeItem("viewQuoteData");
+    sessionStorage.removeItem("quoteFormData");
     router.push(`/admin/quotes/create?view=true&id=${quote.id}`);
   };
 
@@ -198,6 +244,10 @@ export default function QuotesPage() {
         	subscription_enabled: (quote as any).subscription_enabled ?? false,
         	subscription_monthly: (quote as any).subscription_monthly ?? 0,
         	subscription_description: (quote as any).subscription_description ?? '',
+        	quote_type: (quote as any).quote_type ?? 'one_time',
+        	pricing_breakdown: (quote as any).pricing_breakdown ?? null,
+        	pricing_plan_id: (quote as any).pricing_plan_id ?? 'manual',
+        	pricing_plan_name: (quote as any).pricing_plan_name ?? '',
         	iva_included: (quote as any).iva_included ?? false,
         quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
         created_at: quote.created_at || new Date().toISOString()
@@ -251,6 +301,11 @@ export default function QuotesPage() {
         alert('No se puede enviar el correo: el cliente no tiene email registrado.');
         return;
       }
+
+      const confirmSend = window.confirm(
+        `¿Deseas enviar la cotización por correo a ${quote.client_email}?`,
+      );
+      if (!confirmSend) return;
       
       // Preparar datos para el PDF
       const pdfData = {
@@ -278,6 +333,10 @@ export default function QuotesPage() {
         	subscription_enabled: (quote as any).subscription_enabled ?? false,
         	subscription_monthly: (quote as any).subscription_monthly ?? 0,
         	subscription_description: (quote as any).subscription_description ?? '',
+        	quote_type: (quote as any).quote_type ?? 'one_time',
+        	pricing_breakdown: (quote as any).pricing_breakdown ?? null,
+        	pricing_plan_id: (quote as any).pricing_plan_id ?? 'manual',
+        	pricing_plan_name: (quote as any).pricing_plan_name ?? '',
         	iva_included: (quote as any).iva_included ?? false,
         quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
         created_at: quote.created_at || new Date().toISOString()
@@ -293,10 +352,6 @@ export default function QuotesPage() {
       console.log('equipment_total:', pdfData.equipment_total);
       console.log('Subtotal calculado:', pdfData.total_amount + pdfData.equipment_total);
       
-      // Mostrar indicador de carga
-      const loadingMessage = 'Enviando correo...';
-      alert(loadingMessage);
-      
       // Usar la función mejorada que maneja chunks automáticamente
       await sendProfessionalPDFByEmail(pdfData, quote.client_email);
       
@@ -305,8 +360,8 @@ export default function QuotesPage() {
       
       if (result.success) {
         // Cambiar automáticamente el estado a "sent" cuando el correo se envía exitosamente
-        if (quote.status === 'draft') {
-          console.log('🔄 Cambiando estado automáticamente de "draft" a "sent"');
+        if (quote.status === 'draft' || quote.status === 'created') {
+          console.log('🔄 Cambiando estado automáticamente de "created/draft" a "sent"');
           
             try {
             const { error } = await supabase
@@ -335,7 +390,7 @@ export default function QuotesPage() {
           }
         }
         
-        alert(`✅ Correo enviado a ${quote.client_name} - ${quote.client_email}`);
+        alert(`✅ Correo enviado a ${quote.client_email}`);
         console.log('✅ Correo enviado:', result.messageId);
       } else {
         throw new Error('Error desconocido');
@@ -388,6 +443,11 @@ export default function QuotesPage() {
         return;
       }
 
+      const confirmSend = window.confirm(
+        `¿Deseas enviar la cotización por correo a ${quote.client_email}?`,
+      );
+      if (!confirmSend) return;
+
       // Preparar datos para el PDF (igual que en handleShareByEmail)
       const pdfData = {
         client_rut: quote.client_rut || '',
@@ -413,6 +473,10 @@ export default function QuotesPage() {
         subscription_enabled: (quote as any).subscription_enabled ?? false,
         subscription_monthly: (quote as any).subscription_monthly ?? 0,
         subscription_description: (quote as any).subscription_description ?? '',
+        quote_type: (quote as any).quote_type ?? 'one_time',
+        pricing_breakdown: (quote as any).pricing_breakdown ?? null,
+        pricing_plan_id: (quote as any).pricing_plan_id ?? 'manual',
+        pricing_plan_name: (quote as any).pricing_plan_name ?? '',
         iva_included: (quote as any).iva_included ?? false,
         quote_number: quote.quote_number || `COT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`,
         created_at: quote.created_at || new Date().toISOString()
@@ -422,7 +486,7 @@ export default function QuotesPage() {
       await sendProfessionalPDFByEmail(pdfData, quote.client_email);
 
       // Si el envío fue exitoso, actualizar estado a 'sent' (si estaba en 'draft')
-      if (quote.status === 'draft') {
+      if (quote.status === 'draft' || quote.status === 'created') {
         const { error } = await supabase
           .from('rt_quotes')
           .update({ status: 'sent', updated_at: new Date().toISOString() })
@@ -433,10 +497,10 @@ export default function QuotesPage() {
           alert('El correo fue enviado, pero no se pudo actualizar el estado en la base de datos.');
         } else {
           setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, status: 'sent' } : q));
-          alert('✅ Correo enviado y cotización marcada como ENVIADA');
+          alert(`✅ Correo enviado a ${quote.client_email}`);
         }
       } else {
-        alert('✅ Correo enviado');
+        alert(`✅ Correo enviado a ${quote.client_email}`);
       }
 
     } catch (error) {
@@ -457,15 +521,19 @@ export default function QuotesPage() {
   const handleDeleteQuote = async (quoteId: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta cotización?')) {
       try {
-        const { error } = await supabase
-          .from("rt_quotes")
-          .delete()
-          .eq('id', quoteId);
-
-        if (error) throw error;
+        const response = await fetch(`/api/admin/quotes?id=${quoteId}`, {
+          method: "DELETE",
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result?.error) {
+          throw new Error(result?.error || `DELETE failed (${response.status})`);
+        }
         
         console.log('Cotización eliminada exitosamente');
-        loadQuotes(); // Recargar las cotizaciones
+        // Actualizar lista local de inmediato + recargar en background
+        setQuotes((prev) => prev.filter((q) => q.id !== quoteId));
+        setFilteredQuotes((prev) => prev.filter((q) => q.id !== quoteId));
+        loadQuotes();
       } catch (error) {
         console.error("Error eliminando cotización:", error);
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -488,7 +556,8 @@ export default function QuotesPage() {
 
       // Validar transiciones permitidas
       const allowedTransitions: { [key: string]: string[] } = {
-        'draft': [], // Borrador no puede cambiar manualmente (solo automáticamente al enviar)
+        'created': [], // Creada no puede cambiar manualmente (solo automáticamente al enviar)
+        'draft': [], // Borrador no puede cambiar manualmente (legacy)
         'sent': ['accepted', 'rejected', 'expired'], // Enviada puede ir a Aceptada, Rechazada o Expirada
         'accepted': [], // Aceptada no puede cambiar
         'rejected': [], // Rechazada no puede cambiar
@@ -501,8 +570,8 @@ export default function QuotesPage() {
         const currentStatusText = getStatusText(currentStatus);
         const newStatusText = getStatusText(newStatus);
         
-        if (currentStatus === 'draft') {
-          alert(`❌ No se puede cambiar manualmente el estado de "Borrador".\n\nPara cambiar a "Enviada", debes usar el botón "Compartir por correo" (📧).`);
+        if (currentStatus === 'draft' || currentStatus === 'created') {
+          alert(`❌ No se puede cambiar manualmente el estado de "Creada/Borrador".\n\nPara cambiar a "Enviada", debes usar el botón "Compartir por correo" (📧).`);
         } else {
           alert(`❌ Transición no permitida: No se puede cambiar de "${currentStatusText}" a "${newStatusText}"`);
         }
@@ -663,6 +732,7 @@ export default function QuotesPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue8"
             >
               <option value="all">Todos los estados</option>
+              <option value="created">Creada</option>
               <option value="draft">Borrador</option>
               <option value="sent">Enviada</option>
               <option value="accepted">Aceptada</option>
@@ -713,7 +783,7 @@ export default function QuotesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Monto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -774,7 +844,7 @@ export default function QuotesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(quote.total_amount)}
+                        {formatCurrency(getDisplayedAmount(quote))}
                       </div>
                       {quote.equipment_total && quote.equipment_total > 0 && (
                         <div className="text-xs text-gray-500">
@@ -782,13 +852,16 @@ export default function QuotesPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(quote.status)}`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(quote.status)}`}
+                        style={getStatusInlineStyle(quote.status)}
+                      >
                         {getStatusText(quote.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(quote.created_at).toLocaleDateString('es-CL')}
+                      {getDisplayDate(quote)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">

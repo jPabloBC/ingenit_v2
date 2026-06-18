@@ -72,7 +72,15 @@ export async function POST(request: NextRequest) {
       .substring(0, 50); // Limitar a 50 caracteres
     
     const subject = `Cotizacion ${cleanQuoteNumber} - ${cleanProjectTitle}`;
-    const subtotal = (quoteData.total_amount || 0) + (quoteData.equipment_total || 0);
+    const quoteType = String(quoteData.quote_type || "one_time");
+    const oneTimeSubtotal =
+      Number(quoteData.total_amount || 0) + Number(quoteData.equipment_total || 0);
+    const subscriptionEnabled = Boolean(quoteData.subscription_enabled) || Number(quoteData.subscription_monthly) > 0;
+    const subscriptionMonthly = Number(quoteData.subscription_monthly) || 0;
+    const subscriptionIvaIncluded = Boolean(quoteData.iva_included);
+    const isMonthlyOnly =
+      quoteType === "monthly_recurring" && oneTimeSubtotal <= 0 && subscriptionMonthly > 0;
+    const subtotal = isMonthlyOnly ? subscriptionMonthly : oneTimeSubtotal;
 
     // Calcular descuento
     let discountAmount = 0;
@@ -94,11 +102,6 @@ export async function POST(request: NextRequest) {
     const ivaOnSubtotal = Math.round((subtotal * 0.19 + Number.EPSILON) * 100) / 100;
     const totalWithoutDiscountWithIva = Math.round(((subtotal + ivaOnSubtotal) + Number.EPSILON) * 100) / 100;
 
-    // Suscripción
-    const subscriptionEnabled = Boolean(quoteData.subscription_enabled) || Number(quoteData.subscription_monthly) > 0;
-    const subscriptionMonthly = Number(quoteData.subscription_monthly) || 0;
-    const subscriptionIvaIncluded = Boolean(quoteData.iva_included);
-    
     // Normalizar teléfono para evitar prefijos repetidos y espacios raros
     const rawPhone = (quoteData.client_phone || '').toString().trim().replace(/\s+/g, ' ');
     let phoneDisplay = rawPhone.replace(/^(\+\d+)\s+\1\s+/,'$1 ');
@@ -209,7 +212,7 @@ export async function POST(request: NextRequest) {
                       ` : '<tr><td height="16"></td></tr>'}
                       <tr>
                         <td class="card p-32">
-                          <div class="h3">Resumen de la cotización</div>
+                          <div class="h3">Resumen comercial</div>
                           ${quoteData.selected_services && quoteData.selected_services.length > 0 ? `
                           <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
                             <tr>
@@ -228,12 +231,8 @@ export async function POST(request: NextRequest) {
                           ` : ''}
                           <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
                             <tr style="border-bottom:1px solid #e3f2fd;">
-                              <td style="padding:8px 0; color:#2c3e50;">Subtotal</td>
+                              <td style="padding:8px 0; color:#2c3e50;">${isMonthlyOnly ? "Subtotal mensual" : "Subtotal"}</td>
                               <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(subtotal)}</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e3f2fd;">
-                              <td style="padding:8px 0; color:#2c3e50;">Total s/desc. + IVA</td>
-                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(totalWithoutDiscountWithIva)}</td>
                             </tr>
                             ${discountAmount && discountAmount > 0 ? `
                             <tr style="border-bottom:1px solid #e3f2fd;">
@@ -246,11 +245,15 @@ export async function POST(request: NextRequest) {
                             </tr>
                             ` : ''}
                             <tr style="border-bottom:1px solid #e3f2fd;">
-                              <td style="padding:8px 0; color:#2c3e50;">IVA 19%</td>
+                              <td style="padding:8px 0; color:#2c3e50;">${isMonthlyOnly ? "IVA mensual 19%" : "IVA 19%"}</td>
                               <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(ivaAmount)}</td>
                             </tr>
+                            <tr style="border-bottom:1px solid #e3f2fd;">
+                              <td style="padding:8px 0; color:#2c3e50;">${isMonthlyOnly ? "Total mensual s/desc. + IVA" : "Total s/desc. + IVA"}</td>
+                              <td style="padding:8px 0; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(totalConIva)}</td>
+                            </tr>
                             <tr>
-                              <td style="padding:10px 0; font-weight:bold; color:#2c3e50;">Total</td>
+                              <td style="padding:10px 0; font-weight:bold; color:#2c3e50;">${isMonthlyOnly ? "Total mensual" : "Total"}</td>
                               <td style="padding:10px 0; font-weight:bold; color:#2c3e50; text-align:right;">$${new Intl.NumberFormat('es-CL').format(totalConIva)}</td>
                             </tr>
                           </table>
@@ -302,14 +305,15 @@ export async function POST(request: NextRequest) {
       ${quoteData.client_email ? `- Email: ${quoteData.client_email}` : ''}
       ${quoteData.client_phone ? `- Teléfono: ${quoteData.client_phone}` : ''}
       
-      RESUMEN DE LA COTIZACIÓN:
+      RESUMEN COMERCIAL:
       ${quoteData.selected_services && quoteData.selected_services.length > 0 ? `- Servicios: ${quoteData.selected_services.length} servicio(s)` : ''}
       ${quoteData.selected_equipment && quoteData.selected_equipment.length > 0 ? `- Equipos: ${quoteData.selected_equipment.length} equipo(s)` : ''}
-      - Subtotal: $${new Intl.NumberFormat('es-CL').format(subtotal)}
+      - ${isMonthlyOnly ? "Subtotal mensual" : "Subtotal"}: $${new Intl.NumberFormat('es-CL').format(subtotal)}
       ${discountAmount && discountAmount > 0 ? `- Descuento: - $${new Intl.NumberFormat('es-CL').format(Math.round(discountAmount))}
       - Total después del descuento: $${new Intl.NumberFormat('es-CL').format(Math.round(totalAfterDiscount))}
-      ` : ''}- IVA 19%: $${new Intl.NumberFormat('es-CL').format(ivaAmount)}
-      - Total: $${new Intl.NumberFormat('es-CL').format(totalConIva)}
+      ` : ''}- ${isMonthlyOnly ? "IVA mensual 19%" : "IVA 19%"}: $${new Intl.NumberFormat('es-CL').format(ivaAmount)}
+      - ${isMonthlyOnly ? "Total mensual s/desc. + IVA" : "Total s/desc. + IVA"}: $${new Intl.NumberFormat('es-CL').format(totalConIva)}
+      - ${isMonthlyOnly ? "Total mensual" : "Total"}: $${new Intl.NumberFormat('es-CL').format(totalConIva)}
       ${subscriptionEnabled ? (subscriptionIvaIncluded ? `- Suscripción (mensual): $${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)} (IVA incluido)
       ` : `- Suscripción (base): $${new Intl.NumberFormat('es-CL').format(subscriptionMonthly)}
       - IVA 19%: $${new Intl.NumberFormat('es-CL').format(Math.round(subscriptionMonthly * 0.19))}

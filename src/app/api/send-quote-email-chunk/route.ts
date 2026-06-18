@@ -1,122 +1,177 @@
-import { NextRequest, NextResponse } from 'next/server';
-import * as nodemailer from 'nodemailer';
-import path from 'path';
-import { readFile } from 'fs/promises';
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { type NextRequest, NextResponse } from "next/server";
+import * as nodemailer from "nodemailer";
+import type Mail from "nodemailer/lib/mailer";
 
 // Configuración para Vercel Functions
 export const maxDuration = 30;
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+type QuoteData = {
+	[key: string]: unknown;
+	pdfBase64: string;
+	totalChunks: number;
+	chunkIndex: number;
+	isFirstChunk?: boolean;
+	isLastChunk?: boolean;
+	quote_number?: string;
+	id?: string;
+	project_title?: string;
+	client_name?: string;
+	client_phone?: string;
+	total_amount?: number;
+	equipment_total?: number;
+};
+
+type ChunkSession = {
+	chunks: string[];
+	metadata: QuoteData;
+};
+
+type Attachment = {
+	filename: string;
+	content: string | Buffer;
+	encoding?: "base64";
+	cid?: string;
+};
 
 // Almacenamiento temporal de chunks (en producción usar Redis o similar)
-const chunkStorage = new Map<string, { chunks: string[], metadata: any }>();
+const chunkStorage = new Map<string, ChunkSession>();
 
 export async function POST(request: NextRequest) {
-  try {
-    const { quoteData, recipientEmail } = await request.json();
+	try {
+		const { quoteData, recipientEmail } = (await request.json()) as {
+			quoteData: QuoteData;
+			recipientEmail: string;
+		};
 
-    // Si es el primer chunk, inicializar almacenamiento
-    if (quoteData.isFirstChunk) {
-      const sessionId = `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      chunkStorage.set(sessionId, {
-        chunks: new Array(quoteData.totalChunks).fill(''),
-        metadata: quoteData
-      });
-      
-      // Guardar primer chunk
-      chunkStorage.get(sessionId)!.chunks[0] = quoteData.pdfBase64;
-      
-      return NextResponse.json({ 
-        success: true, 
-        sessionId,
-        message: 'Primer chunk recibido' 
-      });
-    }
+		// Si es el primer chunk, inicializar almacenamiento
+		if (quoteData.isFirstChunk) {
+			const sessionId = `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+			const session: ChunkSession = {
+				chunks: new Array(quoteData.totalChunks).fill(""),
+				metadata: quoteData,
+			};
+			chunkStorage.set(sessionId, session);
 
-    // Si es un chunk intermedio o final
-    const sessionId = request.headers.get('x-session-id');
-    if (!sessionId || !chunkStorage.has(sessionId)) {
-      return NextResponse.json(
-        { success: false, error: 'Sesión no encontrada' },
-        { status: 400 }
-      );
-    }
+			// Guardar primer chunk
+			session.chunks[0] = quoteData.pdfBase64;
 
-    const storage = chunkStorage.get(sessionId)!;
-    storage.chunks[quoteData.chunkIndex] = quoteData.pdfBase64;
+			return NextResponse.json({
+				success: true,
+				sessionId,
+				message: "Primer chunk recibido",
+			});
+		}
 
-    // Si es el último chunk, procesar y enviar email
-    if (quoteData.isLastChunk) {
-      // Reconstruir PDF completo
-      const fullPdfBase64 = storage.chunks.join('');
-      const metadata = storage.metadata;
-      
-      // Limpiar almacenamiento
-      chunkStorage.delete(sessionId);
-      
-      // Enviar email con PDF completo
-      return await sendEmailWithPDF(metadata, fullPdfBase64, recipientEmail);
-    }
+		// Si es un chunk intermedio o final
+		const sessionId = request.headers.get("x-session-id");
+		if (!sessionId || !chunkStorage.has(sessionId)) {
+			return NextResponse.json(
+				{ success: false, error: "Sesión no encontrada" },
+				{ status: 400 },
+			);
+		}
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Chunk ${quoteData.chunkIndex + 1} recibido` 
-    });
+		const storage = chunkStorage.get(sessionId);
+		if (!storage) {
+			return NextResponse.json(
+				{ success: false, error: "Sesión no encontrada" },
+				{ status: 400 },
+			);
+		}
+		storage.chunks[quoteData.chunkIndex] = quoteData.pdfBase64;
 
-  } catch (error) {
-    console.error('❌ Error procesando chunk:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error procesando chunk',
-        details: error instanceof Error ? error.message : 'Error desconocido'
-      },
-      { status: 500 }
-    );
-  }
+		// Si es el último chunk, procesar y enviar email
+		if (quoteData.isLastChunk) {
+			// Reconstruir PDF completo
+			const fullPdfBase64 = storage.chunks.join("");
+			const metadata = storage.metadata;
+
+			// Limpiar almacenamiento
+			chunkStorage.delete(sessionId);
+
+			// Enviar email con PDF completo
+			return await sendEmailWithPDF(metadata, fullPdfBase64, recipientEmail);
+		}
+
+		return NextResponse.json({
+			success: true,
+			message: `Chunk ${quoteData.chunkIndex + 1} recibido`,
+		});
+	} catch (error) {
+		console.error("❌ Error procesando chunk:", error);
+		return NextResponse.json(
+			{
+				success: false,
+				error: "Error procesando chunk",
+				details: error instanceof Error ? error.message : "Error desconocido",
+			},
+			{ status: 500 },
+		);
+	}
 }
 
-async function sendEmailWithPDF(quoteData: any, pdfBase64: string, recipientEmail: string) {
-  try {
-    // Configurar el transportador de correo con Titan
-    const transporter = nodemailer.createTransporter({
-      host: 'smtp.titan.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER || 'gerencia@ingenit.cl',
-        pass: process.env.EMAIL_PASS || 'an<s651eM813Per<'
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      encoding: 'utf-8'
-    });
+async function sendEmailWithPDF(
+	quoteData: QuoteData,
+	pdfBase64: string,
+	recipientEmail: string,
+) {
+	try {
+		// Configurar el transportador de correo con Titan
+		const transporter = nodemailer.createTransporter({
+			host: "smtp.titan.email",
+			port: 587,
+			secure: false,
+			auth: {
+				user: process.env.EMAIL_USER || "gerencia@ingenit.cl",
+				pass: process.env.EMAIL_PASS || "an<s651eM813Per<",
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+			encoding: "utf-8",
+		});
 
-    // Leer logo
-    let logoBuffer: Buffer | undefined;
-    try {
-      const logoPath = path.join(process.cwd(), 'public', 'assets', 'logo_transparent_ingenIT.png');
-      const file = await readFile(logoPath);
-      logoBuffer = Buffer.from(file);
-    } catch (e) {
-      console.warn('⚠️ No se pudo cargar el logo para el email:', e);
-    }
+		// Leer logo
+		let logoBuffer: Buffer | undefined;
+		try {
+			const logoPath = path.join(
+				process.cwd(),
+				"public",
+				"assets",
+				"logo_transparent_ingenIT.png",
+			);
+			const file = await readFile(logoPath);
+			logoBuffer = Buffer.from(file);
+		} catch (e) {
+			console.warn("⚠️ No se pudo cargar el logo para el email:", e);
+		}
 
-    // Preparar contenido del correo
-    const cleanQuoteNumber = (quoteData.quote_number || quoteData.id || '').toString().replace(/[^\w\s-]/g, '');
-    const cleanProjectTitle = (quoteData.project_title || '').toString().replace(/[^\w\s-]/g, '');
-    const subject = `Cotizacion ${cleanQuoteNumber} - ${cleanProjectTitle}`;
-    
-    const subtotal = (quoteData.total_amount || 0) + (quoteData.equipment_total || 0);
-    const ivaAmount = Math.round(subtotal * 0.19);
-    const totalConIva = subtotal + ivaAmount;
-    
-    // Normalizar teléfono
-    const rawPhone = (quoteData.client_phone || '').toString().trim().replace(/\s+/g, ' ');
-    let phoneDisplay = rawPhone.replace(/^(\+\d+)\s+\1\s+/,'$1 ');
-    
-    // HTML del email (simplificado para chunks)
-    const htmlBody = `
+		// Preparar contenido del correo
+		const cleanQuoteNumber = (quoteData.quote_number || quoteData.id || "")
+			.toString()
+			.replace(/[^\w\s-]/g, "");
+		const cleanProjectTitle = (quoteData.project_title || "")
+			.toString()
+			.replace(/[^\w\s-]/g, "");
+		const subject = `Cotizacion ${cleanQuoteNumber} - ${cleanProjectTitle}`;
+
+		const subtotal =
+			(quoteData.total_amount || 0) + (quoteData.equipment_total || 0);
+		const ivaAmount = Math.round(subtotal * 0.19);
+		const totalConIva = subtotal + ivaAmount;
+
+		// Normalizar teléfono
+		const rawPhone = (quoteData.client_phone || "")
+			.toString()
+			.trim()
+			.replace(/\s+/g, " ");
+		const phoneDisplay = rawPhone.replace(/^(\+\d+)\s+\1\s+/, "$1 ");
+
+		// HTML del email (simplificado para chunks)
+		const htmlBody = `
       <!DOCTYPE html>
       <html lang="es">
       <head>
@@ -145,18 +200,18 @@ async function sendEmailWithPDF(quoteData: any, pdfBase64: string, recipientEmai
               <h3>Detalles del Proyecto</h3>
               <p><strong>Proyecto:</strong> ${quoteData.project_title}</p>
               <p><strong>Cliente:</strong> ${quoteData.client_name}</p>
-              ${phoneDisplay ? `<p><strong>Teléfono:</strong> ${phoneDisplay}</p>` : ''}
+              ${phoneDisplay ? `<p><strong>Teléfono:</strong> ${phoneDisplay}</p>` : ""}
             </div>
             
             <div class="card">
               <h3>Resumen de la cotización</h3>
-              <p><strong>Subtotal:</strong> $${new Intl.NumberFormat('es-CL').format(subtotal)}</p>
-              <p><strong>IVA 19%:</strong> $${new Intl.NumberFormat('es-CL').format(ivaAmount)}</p>
-              <p><strong>Total:</strong> $${new Intl.NumberFormat('es-CL').format(totalConIva)}</p>
+              <p><strong>Subtotal:</strong> $${new Intl.NumberFormat("es-CL").format(subtotal)}</p>
+              <p><strong>IVA 19%:</strong> $${new Intl.NumberFormat("es-CL").format(ivaAmount)}</p>
+              <p><strong>Total:</strong> $${new Intl.NumberFormat("es-CL").format(totalConIva)}</p>
             </div>
             
             <div style="text-align:center; margin:32px 0;">
-              <a href="https://wa.me/56990206618?text=${encodeURIComponent('Hola, quisiera consultar sobre la cotización ' + cleanQuoteNumber)}" class="btn">
+              <a href="https://wa.me/56990206618?text=${encodeURIComponent(`Hola, quisiera consultar sobre la cotización ${cleanQuoteNumber}`)}" class="btn">
                 Contactar equipo
               </a>
             </div>
@@ -170,52 +225,59 @@ async function sendEmailWithPDF(quoteData: any, pdfBase64: string, recipientEmai
       </body>
       </html>`;
 
-    // Configurar attachments
-    const cleanFileName = (quoteData.client_name || '').replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
-    const cleanQuoteNumberForFile = (quoteData.quote_number || quoteData.id || '').toString().replace(/[^\w\s-]/g, '');
-    
-    const attachments = [
-      {
-        filename: `Cotizacion_${cleanQuoteNumberForFile}_${cleanFileName}.pdf`,
-        content: pdfBase64,
-        encoding: 'base64'
-      } as any
-    ];
-    
-    if (logoBuffer) {
-      attachments.push({
-        filename: 'logo_transparent_ingenIT.png',
-        content: logoBuffer,
-        cid: 'logoIngenIT'
-      } as any);
-    }
+		// Configurar attachments
+		const cleanFileName = (quoteData.client_name || "")
+			.replace(/[^\w\s-]/g, "")
+			.replace(/\s+/g, "_");
+		const cleanQuoteNumberForFile = (
+			quoteData.quote_number ||
+			quoteData.id ||
+			""
+		)
+			.toString()
+			.replace(/[^\w\s-]/g, "");
 
-    const mailOptions = {
-      from: `"Cotización IngenIT" <${process.env.EMAIL_USER || 'gerencia@ingenit.cl'}>`,
-      to: recipientEmail,
-      subject: subject,
-      html: htmlBody,
-      attachments
-    };
+		const attachments: Attachment[] = [
+			{
+				filename: `Cotizacion_${cleanQuoteNumberForFile}_${cleanFileName}.pdf`,
+				content: pdfBase64,
+				encoding: "base64",
+			},
+		];
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Correo enviado exitosamente desde chunks:', info.messageId);
+		if (logoBuffer) {
+			attachments.push({
+				filename: "logo_transparent_ingenIT.png",
+				content: logoBuffer,
+				cid: "logoIngenIT",
+			});
+		}
 
-    return NextResponse.json({ 
-      success: true, 
-      messageId: info.messageId,
-      message: 'Correo enviado exitosamente desde chunks' 
-    });
+		const mailOptions: Mail.Options = {
+			from: `"Cotización IngenIT" <${process.env.EMAIL_USER || "gerencia@ingenit.cl"}>`,
+			to: recipientEmail,
+			subject: subject,
+			html: htmlBody,
+			attachments,
+		};
 
-  } catch (error) {
-    console.error('❌ Error enviando correo desde chunks:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error enviando el correo desde chunks',
-        details: error instanceof Error ? error.message : 'Error desconocido'
-      },
-      { status: 500 }
-    );
-  }
+		const info = await transporter.sendMail(mailOptions);
+		console.log("✅ Correo enviado exitosamente desde chunks:", info.messageId);
+
+		return NextResponse.json({
+			success: true,
+			messageId: info.messageId,
+			message: "Correo enviado exitosamente desde chunks",
+		});
+	} catch (error) {
+		console.error("❌ Error enviando correo desde chunks:", error);
+		return NextResponse.json(
+			{
+				success: false,
+				error: "Error enviando el correo desde chunks",
+				details: error instanceof Error ? error.message : "Error desconocido",
+			},
+			{ status: 500 },
+		);
+	}
 }

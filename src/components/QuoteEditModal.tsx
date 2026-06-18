@@ -1,432 +1,555 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Save, Edit, Trash2 } from "lucide-react";
+import { Edit, Save, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface Quote {
-    id: string;
-    quote_number: string;
-    client_name: string;
-    client_email: string;
-    client_phone: string;
-    client_phone_country: string;
-    client_address: string;
-    client_region: string;
-    client_commune: string;
-    client_country: string;
-    project_title: string;
-    project_description: string;
-    services: any[];
-    total_amount: number;
-    status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
-    valid_until: string;
-    notes: string;
-    terms_conditions: string;
-    // Suscripción
-    subscription_enabled?: boolean;
-    subscription_monthly?: number;
-    subscription_description?: string;
-    iva_included?: boolean;
-    created_at: string;
+	id: string;
+	quote_number: string;
+	client_name: string;
+	client_email: string;
+	client_phone: string;
+	client_phone_country: string;
+	client_address: string;
+	client_region: string;
+	client_commune: string;
+	client_country: string;
+	project_title: string;
+	project_description: string;
+	services: {
+		name: string;
+		description?: string;
+		price?: number;
+		granularComponents?: {
+			name: string;
+			quantity: number;
+			unit: string;
+			unitPrice: number;
+			totalPrice: number;
+		}[];
+	}[];
+	total_amount: number;
+	status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+	valid_until: string;
+	notes: string;
+	terms_conditions: string;
+	// Suscripción
+	subscription_enabled?: boolean;
+	subscription_monthly?: number;
+	subscription_description?: string;
+	iva_included?: boolean;
+	created_at: string;
 }
 
 interface QuoteEditModalProps {
-    quote: Quote | null;
-    isOpen: boolean;
-    onClose: () => void;
-    onSave: () => void;
+	quote: Quote | null;
+	isOpen: boolean;
+	onClose: () => void;
+	onSave: () => void;
 }
 
-export default function QuoteEditModal({ quote, isOpen, onClose, onSave }: QuoteEditModalProps) {
-    const [formData, setFormData] = useState<Partial<Quote>>({ services: [], total_amount: 0 });
-    const [isLoading, setIsLoading] = useState(false);
-    const [editingService, setEditingService] = useState<number | null>(null);
+export default function QuoteEditModal({
+	quote,
+	isOpen,
+	onClose,
+	onSave,
+}: QuoteEditModalProps) {
+	const [formData, setFormData] = useState<Partial<Quote>>({
+		services: [],
+		total_amount: 0,
+	});
+	const [isLoading, setIsLoading] = useState(false);
+	const [editingService, setEditingService] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (quote) {
-            setFormData({ ...quote, services: quote.services ?? [] });
-        }
-    }, [quote]);
+	useEffect(() => {
+		if (quote) {
+			setFormData({ ...quote, services: quote.services ?? [] });
+		}
+	}, [quote]);
 
-    const handleSave = async () => {
-        if (!quote?.id) return;
+	const handleSave = async () => {
+		if (!quote?.id) return;
 
-        try {
-            setIsLoading(true);
-            const { error } = await supabase
-                .from("rt_quotes")
-                .update(formData)
-                .eq("id", quote.id);
+		try {
+			setIsLoading(true);
+			const { error } = await supabase
+				.from("rt_quotes")
+				.update(formData)
+				.eq("id", quote.id);
 
-            if (error) throw error;
-            
-            onSave();
-            onClose();
-        } catch (error) {
-            console.error("Error updating quote:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+			if (error) throw error;
 
-    const updateService = (index: number, field: string, value: any) => {
-        if (!formData) return;
+			onSave();
+			onClose();
+		} catch (error) {
+			console.error("Error updating quote:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-        const updatedServices = [...(formData.services ?? [])];
-        updatedServices[index] = {
-            ...updatedServices[index],
-            [field]: value
-        };
+	const updateService = (index: number, field: string, value: unknown) => {
+		if (!formData) return;
 
-        const total = updatedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+		const updatedServices = [...(formData.services ?? [])];
+		updatedServices[index] = {
+			...updatedServices[index],
+			[field]: value,
+		};
 
-        setFormData({
-            ...formData,
-            services: updatedServices,
-            total_amount: total
-        });
-    };
+		const total = updatedServices.reduce((sum, service) => {
+			return sum + (typeof service.price === "number" ? service.price : 0);
+		}, 0);
 
-    const removeService = (index: number) => {
-        if (!formData) return;
+		setFormData({
+			...formData,
+			services: updatedServices,
+			total_amount: total,
+		});
+	};
 
-        const updatedServices = (formData.services ?? []).filter((_, i) => i !== index);
-        const total = updatedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+	const removeService = (index: number) => {
+		if (!formData) return;
 
-        setFormData({
-            ...formData,
-            services: updatedServices,
-            total_amount: total
-        });
-    };
+		const updatedServices = (formData.services ?? []).filter(
+			(_, i) => i !== index,
+		);
+		const total = updatedServices.reduce((sum, service) => {
+			return sum + (typeof service.price === "number" ? service.price : 0);
+		}, 0);
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP'
-        }).format(amount);
-    };
+		setFormData({
+			...formData,
+			services: updatedServices,
+			total_amount: total,
+		});
+	};
 
-    if (!isOpen || !formData) return null;
+	const formatCurrency = (amount: number) => {
+		return new Intl.NumberFormat("es-CL", {
+			style: "currency",
+			currency: "CLP",
+		}).format(amount);
+	};
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Editar Cotización #{formData.quote_number}
-                        </h2>
-                        <p className="text-sm text-gray-600">
-                            {formData.client_name} - {formData.project_title}
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+	if (!isOpen || !formData) return null;
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                    {/* Información del Cliente */}
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Información del Cliente</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Nombre del Cliente
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.client_name}
-                                    onChange={(e) => setFormData({...formData, client_name: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={formData.client_email}
-                                    onChange={(e) => setFormData({...formData, client_email: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Teléfono
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.client_phone}
-                                    onChange={(e) => setFormData({...formData, client_phone: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Dirección
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.client_address}
-                                    onChange={(e) => setFormData({...formData, client_address: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    </div>
+	return (
+		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+			<div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
+				{/* Header */}
+				<div className="flex items-center justify-between p-6 border-b border-gray-200">
+					<div>
+						<h2 className="text-xl font-semibold text-gray-900">
+							Editar Cotización #{formData.quote_number}
+						</h2>
+						<p className="text-sm text-gray-600">
+							{formData.client_name} - {formData.project_title}
+						</p>
+					</div>
+					<button
+						type="button"
+						onClick={onClose}
+						className="p-2 text-gray-400 hover:text-gray-600"
+					>
+						<X className="w-5 h-5" />
+					</button>
+				</div>
 
-                    {/* Información del Proyecto */}
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Información del Proyecto</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Título del Proyecto
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.project_title}
-                                    onChange={(e) => setFormData({...formData, project_title: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Descripción
-                                </label>
-                                <textarea
-                                    value={formData.project_description}
-                                    onChange={(e) => setFormData({...formData, project_description: e.target.value})}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    </div>
+				{/* Content */}
+				<div className="p-6 space-y-6">
+					{/* Información del Cliente */}
+					<div>
+						<h3 className="text-lg font-medium text-gray-900 mb-4">
+							Información del Cliente
+						</h3>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Nombre del Cliente
+								</p>
+								<input
+									type="text"
+									value={formData.client_name}
+									onChange={(e) =>
+										setFormData({ ...formData, client_name: e.target.value })
+									}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Email
+								</p>
+								<input
+									type="email"
+									value={formData.client_email}
+									onChange={(e) =>
+										setFormData({ ...formData, client_email: e.target.value })
+									}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Teléfono
+								</p>
+								<input
+									type="text"
+									value={formData.client_phone}
+									onChange={(e) =>
+										setFormData({ ...formData, client_phone: e.target.value })
+									}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Dirección
+								</p>
+								<input
+									type="text"
+									value={formData.client_address}
+									onChange={(e) =>
+										setFormData({ ...formData, client_address: e.target.value })
+									}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+						</div>
+					</div>
 
-                    {/* Servicios */}
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Servicios</h3>
-                        <div className="space-y-4">
-                            {(formData.services ?? []).map((service, index) => (
-                                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h4 className="font-medium text-gray-900">{service.name}</h4>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => setEditingService(editingService === index ? null : index)}
-                                                className="p-1 text-blue-600 hover:text-blue-800"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => removeService(index)}
-                                                className="p-1 text-red-600 hover:text-red-800"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    {editingService === index ? (
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Nombre del Servicio
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={service.name}
-                                                    onChange={(e) => updateService(index, 'name', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Descripción
-                                                </label>
-                                                <textarea
-                                                    value={service.description || ''}
-                                                    onChange={(e) => updateService(index, 'description', e.target.value)}
-                                                    rows={2}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Precio
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={service.price || 0}
-                                                    onChange={(e) => updateService(index, 'price', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                                                />
-                                            </div>
-                                            {/* Mostrar componentes granulares si existen */}
-                                            {service.granularComponents && service.granularComponents.length > 0 && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                        Componentes Granulares
-                                                    </label>
-                                                    <div className="bg-gray-50 p-3 rounded-lg">
-                                                        {service.granularComponents.map((comp: any, compIndex: number) => (
-                                                            <div key={compIndex} className="text-xs text-gray-600 mb-1">
-                                                                • {comp.name}: {comp.quantity} {comp.unit} x {formatCurrency(comp.unitPrice)} = {formatCurrency(comp.totalPrice)}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="text-sm text-gray-600">
-                                            <p>{service.description}</p>
-                                            <p className="font-medium text-gray-900 mt-1">
-                                                Precio: {formatCurrency(service.price || 0)}
-                                            </p>
-                                            {/* Mostrar componentes granulares si existen */}
-                                            {service.granularComponents && service.granularComponents.length > 0 && (
-                                                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                                                    <p className="text-xs font-medium text-blue-800 mb-1">Componentes Granulares:</p>
-                                                    {service.granularComponents.map((comp: any, compIndex: number) => (
-                                                        <div key={compIndex} className="text-xs text-blue-700">
-                                                            • {comp.name}: {comp.quantity} {comp.unit} x {formatCurrency(comp.unitPrice)} = {formatCurrency(comp.totalPrice)}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+					{/* Información del Proyecto */}
+					<div>
+						<h3 className="text-lg font-medium text-gray-900 mb-4">
+							Información del Proyecto
+						</h3>
+						<div className="space-y-4">
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Título del Proyecto
+								</p>
+								<input
+									type="text"
+									value={formData.project_title}
+									onChange={(e) =>
+										setFormData({ ...formData, project_title: e.target.value })
+									}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<p className="block text-sm font-medium text-gray-700 mb-1">
+									Descripción
+								</p>
+								<textarea
+									value={formData.project_description}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											project_description: e.target.value,
+										})
+									}
+									rows={3}
+									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+								/>
+							</div>
+						</div>
+					</div>
 
-                    {/* Total */}
-                    <div className="border-t border-gray-200 pt-4">
-                        <div className="flex justify-between items-center">
-                            <span className="text-lg font-medium text-gray-900">Total:</span>
-                            <span className="text-2xl font-bold text-blue8">
-                                {formatCurrency(formData.total_amount || 0)}
-                            </span>
-                        </div>
-                    </div>
+					{/* Servicios */}
+					<div>
+						<h3 className="text-lg font-medium text-gray-900 mb-4">
+							Servicios
+						</h3>
+						<div className="space-y-4">
+							{(formData.services ?? []).map((service, index) => (
+								<div
+									key={`${service.name}-${service.description ?? ""}-${service.price ?? 0}`}
+									className="border border-gray-200 rounded-lg p-4"
+								>
+									<div className="flex items-center justify-between mb-3">
+										<h4 className="font-medium text-gray-900">
+											{service.name}
+										</h4>
+										<div className="flex items-center gap-2">
+											<button
+												type="button"
+												onClick={() =>
+													setEditingService(
+														editingService === index ? null : index,
+													)
+												}
+												className="p-1 text-blue-600 hover:text-blue-800"
+											>
+												<Edit className="w-4 h-4" />
+											</button>
+											<button
+												type="button"
+												onClick={() => removeService(index)}
+												className="p-1 text-red-600 hover:text-red-800"
+											>
+												<Trash2 className="w-4 h-4" />
+											</button>
+										</div>
+									</div>
 
-                    {/* Suscripción mensual (editor) */}
-                    <div className="mt-4 border-t border-gray-100 pt-4">
-                        <h3 className="text-lg font-medium text-gray-900 mb-3">Suscripción mensual</h3>
-                        <div className="flex items-center gap-3 mb-3">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={!!(formData.subscription_enabled || (formData.subscription_monthly && formData.subscription_monthly > 0))}
-                                    onChange={(e) => setFormData({...formData, subscription_enabled: e.target.checked})}
-                                    className="w-4 h-4"
-                                />
-                                <span className="text-gray-700">Cobrar suscripción mensual (cobro aparte)</span>
-                            </label>
-                        </div>
-                        {(formData.subscription_enabled || (formData.subscription_monthly && formData.subscription_monthly > 0)) && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Monto suscripción mensual</label>
-                                    <input
-                                        type="number"
-                                        value={formData.subscription_monthly ?? 0}
-                                        onChange={(e) => setFormData({...formData, subscription_monthly: parseFloat(e.target.value) || 0})}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.subscription_description || ''}
-                                        onChange={(e) => setFormData({...formData, subscription_description: e.target.value})}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                    />
-                                </div>
-                                <div className="col-span-1 md:col-span-2 flex items-center gap-4">
-                                    <label className="flex items-center gap-2 text-sm">
-                                        <input
-                                            type="radio"
-                                            name="iva_option_edit"
-                                            checked={!!formData.iva_included}
-                                            onChange={() => setFormData({...formData, iva_included: true})}
-                                            className="w-4 h-4"
-                                        />
-                                        <span>IVA incluido</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm">
-                                        <input
-                                            type="radio"
-                                            name="iva_option_edit"
-                                            checked={!formData.iva_included}
-                                            onChange={() => setFormData({...formData, iva_included: false})}
-                                            className="w-4 h-4"
-                                        />
-                                        <span>+ IVA</span>
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+									{editingService === index ? (
+										<div className="space-y-3">
+											<div>
+												<p className="block text-sm font-medium text-gray-700 mb-1">
+													Nombre del Servicio
+												</p>
+												<input
+													type="text"
+													value={service.name}
+													onChange={(e) =>
+														updateService(index, "name", e.target.value)
+													}
+													className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+												/>
+											</div>
+											<div>
+												<p className="block text-sm font-medium text-gray-700 mb-1">
+													Descripción
+												</p>
+												<textarea
+													value={service.description || ""}
+													onChange={(e) =>
+														updateService(index, "description", e.target.value)
+													}
+													rows={2}
+													className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+												/>
+											</div>
+											<div>
+												<p className="block text-sm font-medium text-gray-700 mb-1">
+													Precio
+												</p>
+												<input
+													type="number"
+													value={service.price || 0}
+													onChange={(e) =>
+														updateService(
+															index,
+															"price",
+															parseFloat(e.target.value) || 0,
+														)
+													}
+													className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+												/>
+											</div>
+											{/* Mostrar componentes granulares si existen */}
+											{service.granularComponents &&
+												service.granularComponents.length > 0 && (
+													<div>
+														<p className="block text-sm font-medium text-gray-700 mb-1">
+															Componentes Granulares
+														</p>
+														<div className="bg-gray-50 p-3 rounded-lg">
+															{service.granularComponents.map((comp) => (
+																<div
+																	key={`${comp.name}-${comp.unit}-${comp.quantity}-${comp.unitPrice}`}
+																	className="text-xs text-gray-600 mb-1"
+																>
+																	• {comp.name}: {comp.quantity} {comp.unit} x{" "}
+																	{formatCurrency(comp.unitPrice)} ={" "}
+																	{formatCurrency(comp.totalPrice)}
+																</div>
+															))}
+														</div>
+													</div>
+												)}
+										</div>
+									) : (
+										<div className="text-sm text-gray-600">
+											<p>{service.description}</p>
+											<p className="font-medium text-gray-900 mt-1">
+												Precio: {formatCurrency(service.price || 0)}
+											</p>
+											{/* Mostrar componentes granulares si existen */}
+											{service.granularComponents &&
+												service.granularComponents.length > 0 && (
+													<div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+														<p className="text-xs font-medium text-blue-800 mb-1">
+															Componentes Granulares:
+														</p>
+														{service.granularComponents.map((comp) => (
+															<div
+																key={`${comp.name}-${comp.unit}-${comp.quantity}-${comp.unitPrice}`}
+																className="text-xs text-blue-700"
+															>
+																• {comp.name}: {comp.quantity} {comp.unit} x{" "}
+																{formatCurrency(comp.unitPrice)} ={" "}
+																{formatCurrency(comp.totalPrice)}
+															</div>
+														))}
+													</div>
+												)}
+										</div>
+									)}
+								</div>
+							))}
+						</div>
+					</div>
 
-                    {/* Notas y Términos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Notas
-                            </label>
-                            <textarea
-                                value={formData.notes}
-                                onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Términos y Condiciones
-                            </label>
-                            <textarea
-                                value={formData.terms_conditions}
-                                onChange={(e) => setFormData({...formData, terms_conditions: e.target.value})}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-                </div>
+					{/* Total */}
+					<div className="border-t border-gray-200 pt-4">
+						<div className="flex justify-between items-center">
+							<span className="text-lg font-medium text-gray-900">Total:</span>
+							<span className="text-2xl font-bold text-blue8">
+								{formatCurrency(formData.total_amount || 0)}
+							</span>
+						</div>
+					</div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isLoading}
-                        className="bg-blue8 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
-                    >
-                        <Save className="w-4 h-4" />
-                        {isLoading ? 'Guardando...' : 'Guardar Cambios'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-} 
+					{/* Suscripción mensual (editor) */}
+					<div className="mt-4 border-t border-gray-100 pt-4">
+						<h3 className="text-lg font-medium text-gray-900 mb-3">
+							Suscripción mensual
+						</h3>
+						<div className="flex items-center gap-3 mb-3">
+							<label className="flex items-center gap-2 text-sm">
+								<input
+									type="checkbox"
+									checked={
+										!!(
+											formData.subscription_enabled ||
+											(formData.subscription_monthly &&
+												formData.subscription_monthly > 0)
+										)
+									}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											subscription_enabled: e.target.checked,
+										})
+									}
+									className="w-4 h-4"
+								/>
+								<span className="text-gray-700">
+									Cobrar suscripción mensual (cobro aparte)
+								</span>
+							</label>
+						</div>
+						{(formData.subscription_enabled ||
+							(formData.subscription_monthly &&
+								formData.subscription_monthly > 0)) && (
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<p className="block text-sm font-medium text-gray-700 mb-1">
+										Monto suscripción mensual
+									</p>
+									<input
+										type="number"
+										value={formData.subscription_monthly ?? 0}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												subscription_monthly: parseFloat(e.target.value) || 0,
+											})
+										}
+										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+									/>
+								</div>
+								<div>
+									<p className="block text-sm font-medium text-gray-700 mb-1">
+										Descripción (opcional)
+									</p>
+									<input
+										type="text"
+										value={formData.subscription_description || ""}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												subscription_description: e.target.value,
+											})
+										}
+										className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+									/>
+								</div>
+								<div className="col-span-1 md:col-span-2 flex items-center gap-4">
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="radio"
+											name="iva_option_edit"
+											checked={!!formData.iva_included}
+											onChange={() =>
+												setFormData({ ...formData, iva_included: true })
+											}
+											className="w-4 h-4"
+										/>
+										<span>IVA incluido</span>
+									</label>
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="radio"
+											name="iva_option_edit"
+											checked={!formData.iva_included}
+											onChange={() =>
+												setFormData({ ...formData, iva_included: false })
+											}
+											className="w-4 h-4"
+										/>
+										<span>+ IVA</span>
+									</label>
+								</div>
+							</div>
+						)}
+					</div>
+
+					{/* Notas y Términos */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div>
+							<p className="block text-sm font-medium text-gray-700 mb-1">
+								Notas
+							</p>
+							<textarea
+								value={formData.notes}
+								onChange={(e) =>
+									setFormData({ ...formData, notes: e.target.value })
+								}
+								rows={3}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+							/>
+						</div>
+						<div>
+							<p className="block text-sm font-medium text-gray-700 mb-1">
+								Términos y Condiciones
+							</p>
+							<textarea
+								value={formData.terms_conditions}
+								onChange={(e) =>
+									setFormData({ ...formData, terms_conditions: e.target.value })
+								}
+								rows={3}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue8 focus:border-transparent"
+							/>
+						</div>
+					</div>
+				</div>
+
+				{/* Footer */}
+				<div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+					<button
+						type="button"
+						onClick={onClose}
+						className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+					>
+						Cancelar
+					</button>
+					<button
+						type="button"
+						onClick={handleSave}
+						disabled={isLoading}
+						className="bg-blue8 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+					>
+						<Save className="w-4 h-4" />
+						{isLoading ? "Guardando..." : "Guardar Cambios"}
+					</button>
+				</div>
+			</div>
+		</div>
+	);
+}

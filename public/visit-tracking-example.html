@@ -26,28 +26,28 @@
         <h3>HL - Health & Lifestyle</h3>
         <p><strong>URL:</strong> hl.ingenit.cl</p>
         <p><strong>Código:</strong> hl</p>
-        <button onclick="trackVisit('hl', 'https://hl.ingenit.cl')">Simular Visita HL</button>
+        <button type="button" onclick="trackVisit('hl', 'https://hl.ingenit.cl')">Simular Visita HL</button>
     </div>
     
     <div class="project-card">
         <h3>MT - Mantenimiento TI</h3>
         <p><strong>URL:</strong> mt.ingenit.cl</p>
         <p><strong>Código:</strong> mt</p>
-        <button onclick="trackVisit('mt', 'https://mt.ingenit.cl')">Simular Visita MT</button>
+        <button type="button" onclick="trackVisit('mt', 'https://mt.ingenit.cl')">Simular Visita MT</button>
     </div>
     
     <div class="project-card">
         <h3>WS - Web Services</h3>
         <p><strong>URL:</strong> ws.ingenit.cl</p>
         <p><strong>Código:</strong> ws</p>
-        <button onclick="trackVisit('ws', 'https://ws.ingenit.cl')">Simular Visita WS</button>
+        <button type="button" onclick="trackVisit('ws', 'https://ws.ingenit.cl')">Simular Visita WS</button>
     </div>
     
     <div class="project-card">
         <h3>Main - IngenIT Principal</h3>
         <p><strong>URL:</strong> ingenit.cl</p>
         <p><strong>Código:</strong> main</p>
-        <button onclick="trackVisit('main', 'https://ingenit.cl')">Simular Visita Main</button>
+        <button type="button" onclick="trackVisit('main', 'https://ingenit.cl')">Simular Visita Main</button>
     </div>
 
     <div id="result"></div>
@@ -175,6 +175,7 @@ ORDER BY total_visits DESC;
     </div>
 
     <script>
+        /* biome-ignore lint/correctness/noUnusedVariables: invoked by inline onclick handlers */
         async function trackVisit(projectCode, projectUrl) {
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = `<p>Enviando visita para ${projectCode}...</p>`;
