@@ -1,4 +1,5 @@
 "use client";
+import { CalendarDays, Eye, Loader2, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -35,7 +36,7 @@ export default function VisitsStats() {
 					schema: "public",
 					table: "rt_visits",
 				},
-				(_payload: unknown) => {
+				() => {
 					// Actualizar estadísticas de visitas en tiempo real
 					fetch("/api/visits?excludeLocal=true")
 						.then((res) => res.json())
@@ -70,64 +71,81 @@ export default function VisitsStats() {
 	};
 
 	if (statsLoading)
-		return <div className="text-gray-500">Cargando visitas...</div>;
-	if (!stats)
 		return (
-			<div className="text-red-500">No se pudieron cargar las visitas</div>
-		);
-
-	return (
-		<div className="bg-white rounded-lg shadow-lg p-6 mt-6 border border-gray-200">
-			<h3 className="font-bold mb-6 text-gray-800 text-lg flex items-center gap-3">
-				<svg
-					className="w-6 h-6 text-gray-600"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-					aria-hidden="true"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={2}
-						d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-					/>
-				</svg>
-				Estadísticas de Visitas
-			</h3>
-			<div className="grid grid-cols-4 gap-4 mb-6">
-				<div className="bg-gray-200 rounded-lg flex justify-center gap-0.5 md:gap-2 items-center border border-gray-100">
-					<span className="text-xs text-gray-400">Hoy</span>
-					<span className="text-xl md:text-3xl font-normal text-white font-mono">
-						{stats.today}
-					</span>
-				</div>
-				<div className="bg-gray-200 rounded-lg flex justify-center gap-0.5 md:gap-2 items-center border border-gray-100">
-					<span className="text-xs text-gray-400">Mes</span>
-					<span className="text-xl md:text-3xl font-normal text-white font-mono">
-						{stats.month}
-					</span>
-				</div>
-				<div className="bg-gray-200 rounded-lg flex justify-center gap-0.5 md:gap-2 items-center border border-gray-100">
-					<span className="text-xs text-gray-400">Año</span>
-					<span className="text-xl md:text-3xl font-normal text-white font-mono">
-						{stats.year}
-					</span>
-				</div>
-				<div className="bg-gray-200 rounded-lg flex justify-center gap-0.5 md:gap-2 items-center border border-gray-100">
-					<span className="text-xs text-gray-400">Total</span>
-					<span className="text-xl md:text-3xl font-normal text-white font-mono">
-						{stats.total}
-					</span>
+			<div className="rounded-md border border-gray9 bg-white p-6 text-gray5 shadow-sm">
+				<div className="flex items-center gap-3">
+					<Loader2 className="h-5 w-5 animate-spin text-blue6" />
+					<span>Cargando visitas...</span>
 				</div>
 			</div>
-			<div className="grid grid-cols-2 gap-4">
-				<div className="flex flex-col gap-4">
+		);
+	if (!stats)
+		return (
+			<div className="rounded-md border border-gold6 bg-gold7 p-6 text-gold1">
+				No se pudieron cargar las visitas
+			</div>
+		);
+
+	const visitCards = [
+		{ label: "Hoy", value: stats.today, accent: "bg-blue6", text: "text-blue6" },
+		{
+			label: "Mes",
+			value: stats.month,
+			accent: "bg-blue5",
+			text: "text-blue5",
+		},
+		{
+			label: "Año",
+			value: stats.year,
+			accent: "bg-blue7",
+			text: "text-blue7",
+		},
+		{
+			label: "Total",
+			value: stats.total,
+			accent: "bg-gold2",
+			text: "text-gold2",
+		},
+	];
+
+	return (
+		<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+			<div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+				<h3 className="flex items-center gap-3 text-lg font-semibold text-gray1">
+					<span className="rounded-md bg-blue15 p-2 text-blue6">
+						<TrendingUp className="h-5 w-5" />
+					</span>
+					Estadísticas de Visitas
+				</h3>
+				<p className="text-sm text-gray5">Tráfico público sin visitas locales</p>
+			</div>
+			<div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+				{visitCards.map((card) => (
+					<div
+						key={card.label}
+						className="relative overflow-hidden rounded-md border border-gray9 bg-gray10 p-4 shadow-sm"
+					>
+						<div className={`absolute inset-x-0 top-0 h-1 ${card.accent}`} />
+						<p className="text-xs font-medium uppercase tracking-wide text-gray5">
+							{card.label}
+						</p>
+						<p className={`mt-2 text-3xl font-semibold leading-none ${card.text}`}>
+							{card.value.toLocaleString("es-CL")}
+						</p>
+					</div>
+				))}
+			</div>
+			<div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.45fr)]">
+				<div className="flex flex-col gap-2">
+					<label className="flex items-center gap-2 text-sm font-medium text-gray4">
+						<CalendarDays className="h-4 w-4 text-gray6" />
+						Consultar por fecha
+					</label>
 					<DatePicker
 						selected={selectedDate}
 						onChange={handleDateChange}
 						dateFormat="yyyy-MM-dd"
-						className="visits-datepicker-input border rounded-lg px-4 py-3 text-sm md:text-base shadow-sm focus:ring focus:ring-gray-200 text-center text-gray-600 w-full rounded-md"
+						className="visits-datepicker-input w-full rounded-md border border-gray9 bg-white px-4 py-3 text-left text-sm text-gray3 shadow-sm placeholder:text-gray6 focus:border-blue6 focus:ring-2 focus:ring-blue6/10 md:text-base"
 						placeholderText="Elige una fecha"
 						maxDate={new Date()}
 						isClearable
@@ -136,14 +154,28 @@ export default function VisitsStats() {
 						popperClassName="custom-datepicker-popper"
 					/>
 				</div>
-				<div className="flex items-center justify-center">
+				<div className="flex min-h-20 items-center justify-center rounded-md border border-gray9 bg-gray10 px-4 py-3 text-center">
 					{selectedDate && visitCount !== null && !dateLoading && (
-						<span className="text-gray-400 font-regular text-3xl">
-							Visitas: {visitCount}
-						</span>
+						<div>
+							<p className="flex items-center justify-center gap-2 text-sm text-gray5">
+								<Eye className="h-4 w-4" />
+								Visitas del día
+							</p>
+							<p className="mt-1 text-3xl font-semibold text-gray1">
+								{visitCount.toLocaleString("es-CL")}
+							</p>
+						</div>
 					)}
 					{selectedDate && dateLoading && (
-						<span className="text-gray-400">Cargando...</span>
+						<span className="flex items-center gap-2 text-sm text-gray5">
+							<Loader2 className="h-4 w-4 animate-spin" />
+							Cargando...
+						</span>
+					)}
+					{!selectedDate && (
+						<span className="text-sm text-gray6">
+							Selecciona una fecha para ver el detalle
+						</span>
 					)}
 				</div>
 			</div>

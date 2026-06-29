@@ -10,6 +10,9 @@ import {
 
 const MENU_FLOW_TARGET_NUMBER = "+56937570007";
 const MENU_FLOW_TARGET_PHONE_ID = "560424903813462";
+// Desactivado por ahora: conserva el flujo, pero evita disparar el menú
+// automáticamente o mediante comandos de texto desde WhatsApp ("menu"/"menú").
+const ENABLE_MT_INITIAL_MENU_TRIGGER = false;
 const MENU_BTN_SEND = "menu_send";
 const MENU_BTN_RATE = "menu_rate";
 const MENU_BTN_AGENT = "menu_agent";
@@ -523,7 +526,12 @@ async function sendContinuePromptForCurrentFlow560424(contactNumber: string) {
 		return;
 	}
 
-	await sendMenuButtonsFor560424(contactNumber);
+	if (ENABLE_MT_INITIAL_MENU_TRIGGER) {
+		await sendMenuButtonsFor560424(contactNumber);
+		return;
+	}
+
+	await sendAndStoreText560424(contactNumber, "Un agente responderá en breve.");
 }
 
 function isSelectionAllowedForSendStep(
@@ -708,6 +716,7 @@ async function sendRecipientReceiveButtons560424(
 	contactNumber: string,
 	_destination: "bolivia" | "chile",
 ) {
+	void _destination;
 	const text = "Selecciona cómo recibirá el dinero tu destinatario.";
 	const result = await sendWhatsAppApiMessage(MENU_FLOW_TARGET_PHONE_ID, {
 		messaging_product: "whatsapp",
@@ -1834,7 +1843,11 @@ async function handleNumber560424FirstMenuFlow(params: {
 	if (selection) {
 		if (selection.id === MENU_BTN_FLOW_RESTART) {
 			clearFlowStateForContact(from);
-			await sendMenuButtonsFor560424(from);
+			if (ENABLE_MT_INITIAL_MENU_TRIGGER) {
+				await sendMenuButtonsFor560424(from);
+			} else {
+				await sendAndStoreText560424(from, "Un agente responderá en breve.");
+			}
 			return;
 		}
 		if (selection.id === MENU_BTN_FLOW_CONTINUE) {
@@ -1926,15 +1939,16 @@ async function handleNumber560424FirstMenuFlow(params: {
 		}
 		if (selection.id === MENU_BTN_BACK_MAIN) {
 			clearFlowStateForContact(from);
-			await sendMenuButtonsFor560424(from);
+			if (ENABLE_MT_INITIAL_MENU_TRIGGER) {
+				await sendMenuButtonsFor560424(from);
+			} else {
+				await sendAndStoreText560424(from, "Un agente responderá en breve.");
+			}
 			return;
 		}
 		if (selection.id === MENU_BTN_END) {
 			clearFlowStateForContact(from);
-			await sendAndStoreText560424(
-				from,
-				"Listo. Cuando quieras, escribe menú para continuar.",
-			);
+			await sendAndStoreText560424(from, "Listo. Un agente responderá en breve.");
 			return;
 		}
 		if (selection.id === MENU_BTN_DEST_BOLIVIA) {
@@ -2175,8 +2189,9 @@ async function handleNumber560424FirstMenuFlow(params: {
 		}
 
 		if (
-			textInput.toLowerCase() === "menu" ||
-			textInput.toLowerCase() === "menú"
+			ENABLE_MT_INITIAL_MENU_TRIGGER &&
+			(textInput.toLowerCase() === "menu" ||
+				textInput.toLowerCase() === "menú")
 		) {
 			clearFlowStateForContact(from);
 			await sendMenuButtonsFor560424(from);
@@ -2524,8 +2539,9 @@ async function handleNumber560424FirstMenuFlow(params: {
 	const incomingRawText = String(message?.text?.body || "").trim();
 	const incomingText = incomingRawText.toLowerCase();
 	if (
-		incomingText === "enviar por whatsapp" ||
-		incomingText === "enviar por whastapp"
+		ENABLE_MT_INITIAL_MENU_TRIGGER &&
+		(incomingText === "enviar por whatsapp" ||
+			incomingText === "enviar por whastapp")
 	) {
 		pendingRateCalculationByContact.delete(from);
 		await sendDestinationButtons560424(from);
@@ -2541,7 +2557,7 @@ async function handleNumber560424FirstMenuFlow(params: {
 		}
 	}
 	if (pendingMode) {
-		if (manualMenuTrigger) {
+		if (ENABLE_MT_INITIAL_MENU_TRIGGER && manualMenuTrigger) {
 			clearFlowStateForContact(from);
 			await sendMenuButtonsFor560424(from);
 			return;
@@ -2635,14 +2651,17 @@ async function handleNumber560424FirstMenuFlow(params: {
 				shortBurstReplyCooldownByContact.set(from, nowMs);
 				await sendAndStoreText560424(
 					from,
-					"Un agente responderá en breve. Si deseas iniciar un nuevo flujo, escribe menú.",
+					"Un agente responderá en breve.",
 				);
 			}
 			return;
 		}
 	}
 
-	if (manualMenuTrigger || isFirstEver || isAfterInactivity) {
+	if (
+		ENABLE_MT_INITIAL_MENU_TRIGGER &&
+		(manualMenuTrigger || isFirstEver || isAfterInactivity)
+	) {
 		console.log("📋 Enviando menú inicial 560424", {
 			from,
 			to,

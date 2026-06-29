@@ -81,13 +81,13 @@ export default function PRUsersPage() {
 			const token = session.data.session?.access_token;
 			if (!token) throw new Error("No hay sesión activa");
 
-				const params = new URLSearchParams();
-				if (filterCompany !== "all") params.set("company_id", filterCompany);
-				if (filterProject !== "all") {
-					params.set("project_id", filterProject);
-					// Keep company users visible even when a project filter is active.
-					params.set("include_unassigned", "true");
-				}
+			const params = new URLSearchParams();
+			if (filterCompany !== "all") params.set("company_id", filterCompany);
+			if (filterProject !== "all") {
+				params.set("project_id", filterProject);
+				// Keep company users visible even when a project filter is active.
+				params.set("include_unassigned", "true");
+			}
 
 			const res = await fetch(`/api/admin/pr/users?${params.toString()}`, {
 				headers: { Authorization: `Bearer ${token}` },
@@ -160,16 +160,16 @@ export default function PRUsersPage() {
 			}
 			try {
 				const { data, error } = await supabase
-					.from("pr_projects")
-					.select("id,name,company_id")
-					.eq("company_id", companyId)
-					.order("created_at", { ascending: false });
+				.from("pr_projects")
+				.select("id,name,company_id")
+				.eq("company_id", companyId)
+				.order("created_at", { ascending: false });
 
-					if (error) {
-						setProjects([]);
-						setFilterProject("all");
-						return;
-					}
+				if (error) {
+					setProjects([]);
+					setFilterProject("all");
+					return;
+				}
 
 				const list = (data || []) as PRProject[];
 				setProjects(list);
@@ -177,15 +177,15 @@ export default function PRUsersPage() {
 					if (prev !== "all" && list.some((project) => project.id === prev)) {
 						return prev;
 					}
-						if (
-							projectIdFromUrl &&
-							list.some((project) => project.id === projectIdFromUrl)
-						) {
-							return projectIdFromUrl;
-						}
-						// Default to all projects to avoid hiding company users accidentally.
-						return "all";
-					});
+					if (
+						projectIdFromUrl &&
+						list.some((project) => project.id === projectIdFromUrl)
+					) {
+						return projectIdFromUrl;
+					}
+					// Default to all projects to avoid hiding company users accidentally.
+					return "all";
+				});
 			} catch {
 				setProjects([]);
 				setFilterProject("all");
@@ -271,28 +271,28 @@ export default function PRUsersPage() {
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "active":
-				return "text-green-600 bg-green-100";
+				return "text-blue6";
 			case "inactive":
-				return "text-red-600 bg-red-100";
+				return "text-gold1";
 			case "pending":
-				return "text-yellow-600 bg-yellow-100";
+				return "text-gold2";
 			default:
-				return "text-gray-600 bg-gray-100";
+				return "text-blue7";
 		}
 	};
 
 	const getRoleColor = (role: string) => {
 		switch (role) {
 			case "admin":
-				return "text-purple-600 bg-purple-100";
+				return "text-blue4";
 			case "dev":
-				return "text-yellow-700 bg-yellow-100";
+				return "text-gold2";
 			case "user":
-				return "text-blue-600 bg-blue-100";
+				return "text-blue6";
 			case "viewer":
-				return "text-gray-600 bg-gray-100";
+				return "text-blue7";
 			default:
-				return "text-gray-600 bg-gray-100";
+				return "text-blue7";
 		}
 	};
 
@@ -308,8 +308,8 @@ export default function PRUsersPage() {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Cargando usuarios...</p>
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue6 mx-auto mb-4"></div>
+					<p className="text-blue7">Cargando usuarios...</p>
 				</div>
 			</div>
 		);
@@ -317,9 +317,8 @@ export default function PRUsersPage() {
 
 	return (
 		<>
-			<div className="p-4 sm:p-6">
-				{/* Header */}
-				<div className="mb-6 sm:mb-8">
+			<div className="relative p-2 sm:p-3 lg:p-4">
+				<div className="mb-4 flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => {
@@ -330,99 +329,105 @@ export default function PRUsersPage() {
 						}}
 						aria-label="Volver a proyectos"
 						title="Volver"
-						className="inline-flex items-center text-gray-300 hover:text-orange-600 transition-colors mb-3"
+						className="inline-flex items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-blue7 hover:text-blue6 hover:shadow-sm"
 					>
-						<ChevronLeft className="w-7 h-7" />
+						<ChevronLeft className="w-5 h-5" />
+						<span className="text-sm font-medium">Volver</span>
 					</button>
-					<div className="flex items-center gap-3 mb-2">
-						<div className="p-2 bg-orange-100 rounded-lg">
-							<Users className="w-6 h-6 text-orange-600" />
-						</div>
-						<h1 className="text-2xl sm:text-3xl font-title text-gray-900">
-							Gestión de Usuarios PR
-						</h1>
-					</div>
-					<p className="text-sm sm:text-base text-gray-600">
-						{filterProject !== "all"
-							? "Administra los usuarios asignados a este proyecto"
-							: "Administra los usuarios del proyecto PR"}
-					</p>
 				</div>
 
+				<button
+					type="button"
+					onClick={() => setShowCreateModal(true)}
+					className="fixed right-5 top-[94px] z-40 flex h-16 w-16 items-center justify-center rounded-full border border-blue8 bg-blue5 text-blue15 shadow-lg hover:bg-blue4"
+					aria-label="Nuevo usuario"
+					title="Nuevo usuario"
+				>
+					<Plus className="h-9 w-9" />
+				</button>
+
 				{/* Stats Cards */}
-				<div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-					<div className="bg-white p-4 rounded-lg shadow border">
+				<div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+					<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-600">
-									Total Usuarios
-								</p>
-								<p className="text-2xl font-bold text-gray-900">
-									{users.length}
-								</p>
+								<p className="text-sm font-medium text-blue7">Total Usuarios</p>
+								<p className="text-2xl font-bold text-blue1">{users.length}</p>
 							</div>
-							<Users className="w-8 h-8 text-orange-600" />
+							<div className="p-3 bg-blue6 rounded-md">
+								<Users className="w-7 h-7 text-white" />
+							</div>
 						</div>
 					</div>
 
-					<div className="bg-white p-4 rounded-lg shadow border">
+					<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-600">Activos</p>
-								<p className="text-2xl font-bold text-green-600">
+								<p className="text-sm font-medium text-blue7">Activos</p>
+								<p className="text-2xl font-bold text-blue1">
 									{users.filter((u) => u.status === "active").length}
 								</p>
 							</div>
-							<UserCheck className="w-8 h-8 text-green-600" />
+							<div className="p-3 bg-blue5 rounded-md">
+								<UserCheck className="w-7 h-7 text-white" />
+							</div>
 						</div>
 					</div>
 
-					<div className="bg-white p-4 rounded-lg shadow border">
+					<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-gold6">
+						<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-600">Pendientes</p>
-								<p className="text-2xl font-bold text-yellow-600">
+								<p className="text-sm font-medium text-gold1">Pendientes</p>
+								<p className="text-2xl font-bold text-gold">
 									{users.filter((u) => u.status === "pending").length}
 								</p>
 							</div>
-							<Calendar className="w-8 h-8 text-yellow-600" />
+							<div className="p-3 bg-gold2 rounded-md">
+								<Calendar className="w-7 h-7 text-white" />
+							</div>
 						</div>
 					</div>
 
-					<div className="bg-white p-4 rounded-lg shadow border">
+					<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue7" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-600">Inactivos</p>
-								<p className="text-2xl font-bold text-red-600">
+								<p className="text-sm font-medium text-blue7">Inactivos</p>
+								<p className="text-2xl font-bold text-blue1">
 									{users.filter((u) => u.status === "inactive").length}
 								</p>
 							</div>
-							<UserX className="w-8 h-8 text-red-600" />
+							<div className="p-3 bg-blue7 rounded-md">
+								<UserX className="w-7 h-7 text-white" />
+							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Filters and Search */}
-				<div className="bg-white rounded-lg shadow border p-4 mb-6">
-					<div className="flex flex-col sm:flex-row gap-4">
+				<div className="bg-white rounded-md shadow-sm border border-gray9 p-4 mb-4">
+					<div className="flex flex-col lg:flex-row gap-4">
 						<div className="flex-1">
 							<div className="relative">
-								<Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+								<Search className="w-4 h-4 text-blue7 absolute left-3 top-1/2 transform -translate-y-1/2" />
 								<input
 									type="text"
 									placeholder="Buscar usuarios..."
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+									className="w-full pl-10 pr-4 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 								/>
 							</div>
 						</div>
 
-						<div className="flex gap-2">
+						<div className="flex flex-col sm:flex-row gap-3">
 							<select
 								value={filterStatus}
 								onChange={(e) => setFilterStatus(e.target.value)}
-								className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 							>
 								<option value="all">Todos los estados</option>
 								<option value="active">Activos</option>
@@ -436,7 +441,7 @@ export default function PRUsersPage() {
 									setFilterCompany(e.target.value);
 									setFilterProject("all");
 								}}
-								className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 							>
 								<option value="all">Todas las empresas</option>
 								{companies.map((c) => (
@@ -450,7 +455,7 @@ export default function PRUsersPage() {
 								value={filterProject}
 								onChange={(e) => setFilterProject(e.target.value)}
 								disabled={filterCompany === "all"}
-								className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100"
+								className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6 disabled:bg-gray10 disabled:text-blue7"
 							>
 								<option value="all">
 									{filterCompany === "all"
@@ -467,7 +472,7 @@ export default function PRUsersPage() {
 							<select
 								value={filterRole}
 								onChange={(e) => setFilterRole(e.target.value)}
-								className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 							>
 								<option value="all">Todos los roles</option>
 								{/* Removed deprecated roles */}
@@ -477,54 +482,46 @@ export default function PRUsersPage() {
 								<option value="dev">Desarrollador (Dev)</option>
 							</select>
 
-							<button
-								type="button"
-								onClick={() => setShowCreateModal(true)}
-								className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center gap-2"
-							>
-								<Plus className="w-4 h-4" />
-								Nuevo Usuario
-							</button>
 						</div>
 					</div>
 				</div>
 
 				{loadError && (
-					<div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+					<div className="mb-4 rounded-md border border-gold6 bg-white px-4 py-3 text-sm text-gold">
 						Error cargando `pr_users`: {loadError}
 					</div>
 				)}
 
 				{/* Users Table */}
-				<div className="bg-white rounded-lg shadow border overflow-hidden">
+				<div className="bg-white rounded-md shadow-sm border border-gray9 overflow-hidden">
 					<div className="overflow-x-auto">
 						<table className="w-full">
-							<thead className="bg-gray-50 border-b">
+							<thead className="bg-gray10 border-b border-gray9">
 								<tr>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Usuario
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Contacto
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Rol
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Proyectos
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Estado
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Último acceso
 									</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									<th className="px-4 py-3 text-left text-xs font-semibold text-blue7 uppercase tracking-wider">
 										Acciones
 									</th>
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-gray-200">
+							<tbody className="divide-y divide-gray9">
 								{/** Group users by company */}
 								{(() => {
 									const groups: Record<string, PRUser[]> = {};
@@ -552,10 +549,10 @@ export default function PRUsersPage() {
 
 									return orderedKeys.map((key) => (
 										<Fragment key={key}>
-											<tr className="bg-gray-100">
+											<tr className="bg-blue15">
 												<td
 													colSpan={7}
-													className="px-6 py-2 text-sm font-semibold text-gray-700"
+													className="px-4 py-2 text-sm font-semibold text-blue1"
 												>
 													{key === "__no_company__"
 														? "IngenIT"
@@ -563,48 +560,48 @@ export default function PRUsersPage() {
 												</td>
 											</tr>
 											{groups[key].map((user) => (
-												<tr key={user.id} className="hover:bg-gray-50">
-													<td className="px-6 py-4">
+												<tr key={user.id} className="hover:bg-gray10">
+													<td className="px-4 py-4">
 														<div className="flex items-center">
-															<div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-																<Users className="w-5 h-5 text-orange-600" />
+															<div className="w-10 h-10 bg-blue6 rounded-md flex items-center justify-center">
+																<Users className="w-5 h-5 text-white" />
 															</div>
 															<div className="ml-4">
-																<div className="text-sm font-medium text-gray-900">
+																<div className="text-sm font-medium text-blue1">
 																	{toTitleCase(
 																		`${user.first_name || user.name || ""} ${user.last_name || user.apellidos || ""}`.trim(),
 																	) ||
 																		"Sin nombre"}
 																</div>
-																<div className="text-sm text-gray-500">
+																<div className="text-sm text-gray5">
 																	ID: {user.auth_id}
 																</div>
 															</div>
 														</div>
 													</td>
 
-													<td className="px-6 py-4">
-														<div className="text-sm text-gray-900 flex items-center gap-1">
-															<Mail className="w-4 h-4 text-gray-400" />
+													<td className="px-4 py-4">
+														<div className="text-sm text-blue1 flex items-center gap-1">
+															<Mail className="w-4 h-4 text-blue7" />
 															{user.email}
 														</div>
 														{user.phone && (
-															<div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-																<Phone className="w-4 h-4 text-gray-400" />
+															<div className="text-sm text-gray5 flex items-center gap-1 mt-1">
+																<Phone className="w-4 h-4 text-blue7" />
 																{user.phone}
 															</div>
 														)}
 													</td>
 
-													<td className="px-6 py-4">
+													<td className="px-4 py-4">
 														<span
-															className={`px-2 py-1 text-xs rounded-full ${getRoleColor(user.role)}`}
+															className={`text-xs font-semibold uppercase ${getRoleColor(user.role)}`}
 														>
 															{user.role}
 														</span>
 													</td>
 
-													<td className="px-6 py-4">
+													<td className="px-4 py-4">
 														<div className="flex flex-wrap gap-1.5">
 															{(user.project_access || []).length > 0 ? (
 																(user.project_access || []).map((project) => (
@@ -622,28 +619,28 @@ export default function PRUsersPage() {
 																			router.push(`/admin/pr/access?${params.toString()}`);
 																		}}
 																		title={`Ir a accesos del proyecto ${project.name}`}
-																		className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors cursor-pointer"
+																		className="rounded-md border border-blue13 bg-gray10 px-2 py-1 text-xs font-semibold text-blue6 hover:border-blue6 hover:bg-white"
 																	>
 																		{project.name}
 																	</button>
 																))
 															) : (
-																<span className="text-xs text-gray-400">
+																<span className="text-xs text-gray6">
 																	Sin acceso a proyectos
 																</span>
 															)}
 														</div>
 													</td>
 
-													<td className="px-6 py-4">
+													<td className="px-4 py-4">
 														<span
-															className={`px-2 py-1 text-xs rounded-full ${getStatusColor(user.status)}`}
+															className={`text-xs font-semibold uppercase ${getStatusColor(user.status)}`}
 														>
 															{user.status}
 														</span>
 													</td>
 
-													<td className="px-6 py-4 text-sm text-gray-500">
+													<td className="px-4 py-4 text-sm text-gray5">
 														{user.updated_at
 															? new Date(user.updated_at).toLocaleString(
 																	"es-CL",
@@ -651,12 +648,12 @@ export default function PRUsersPage() {
 															: "Nunca"}
 													</td>
 
-													<td className="px-6 py-4">
+													<td className="px-4 py-4">
 														<div className="flex items-center gap-2">
 															<button
 																type="button"
 																onClick={() => handleEditUser(user)}
-																className="text-blue-600 hover:text-blue-800 p-1"
+																className="text-blue6 hover:text-blue5 p-1"
 																title="Editar usuario"
 															>
 																<Edit className="w-4 h-4" />
@@ -664,7 +661,7 @@ export default function PRUsersPage() {
 															<button
 																type="button"
 																onClick={() => handleDeleteUser(user)}
-																className="text-red-600 hover:text-red-800 p-1"
+																className="text-gold1 hover:text-gold p-1"
 																title="Eliminar usuario"
 															>
 																<Trash2 className="w-4 h-4" />
@@ -682,9 +679,9 @@ export default function PRUsersPage() {
 
 					{filteredUsers.length === 0 && (
 						<div className="text-center py-8">
-							<Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-							<p className="text-gray-500">No se encontraron usuarios</p>
-							<p className="text-sm text-gray-400">
+							<Users className="w-12 h-12 text-blue11 mx-auto mb-4" />
+							<p className="text-blue1 font-medium">No se encontraron usuarios</p>
+							<p className="text-sm text-blue7">
 								{filterCompany !== "all" && filterProject !== "all"
 									? "Este proyecto aún no tiene usuarios asignados. El administrador creado al crear la compañía es de nivel compañía."
 									: searchTerm || filterStatus !== "all" || filterRole !== "all"

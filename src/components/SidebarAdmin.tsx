@@ -321,14 +321,11 @@ export default function SidebarAdmin() {
 	const router = useRouter();
 	const pathname = usePathname();
 
-	const [_isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-	const [_isLoading, setIsLoading] = useState<boolean>(true);
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [allowedScreens, setAllowedScreens] = useState<
 		{ screen_id: string; label: string }[]
 	>([]); // [{screen_id, label}]
 	const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({}); // Para manejar el colapso de sub screens
-	const [_userRole, setUserRole] = useState<string | null>(null);
 	const { isCollapsed, toggleCollapse } = useSidebar();
 
 	useEffect(() => {
@@ -338,8 +335,6 @@ export default function SidebarAdmin() {
 					pathname === "/admin/login" ||
 					pathname === "/admin/reset-password"
 				) {
-					setIsAuthenticated(false);
-					setIsLoading(false);
 					return;
 				}
 
@@ -360,10 +355,8 @@ export default function SidebarAdmin() {
 									(errorProfile.message || JSON.stringify(errorProfile)),
 							);
 							console.error("Supabase error:", errorProfile);
-							setIsLoading(false);
 							return;
 						}
-						setUserRole(profile?.role || null);
 						if (profile?.role === "dev") {
 							// Acceso total: incluir solo pantallas principales (no sub-screens con '_')
 							// Apply preferred ordering so key screens appear before settings
@@ -384,8 +377,6 @@ export default function SidebarAdmin() {
 									label: SCREEN_CONFIG[screen_id].label,
 								})),
 							);
-							setIsAuthenticated(true);
-							setIsLoading(false);
 							return;
 						}
 						// Si no es dev, usar allowed_screens de rt_profiles
@@ -426,7 +417,6 @@ export default function SidebarAdmin() {
 						});
 						console.log("Screens permitidas (allowedScreens):", allowed);
 						setAllowedScreens(allowed);
-						setIsAuthenticated(true);
 					} else {
 						router.push("/admin/login");
 					}
@@ -438,7 +428,6 @@ export default function SidebarAdmin() {
 						try {
 							const userData = JSON.parse(adminUser);
 							if (userData.email && userData.role) {
-								setUserRole(userData.role);
 								// Apply same preferred ordering for fallback
 								const allScreens = Object.keys(SCREEN_CONFIG).filter(
 									(id) => !id.includes("_"),
@@ -457,7 +446,6 @@ export default function SidebarAdmin() {
 										label: SCREEN_CONFIG[screen_id].label,
 									})),
 								);
-								setIsAuthenticated(true);
 							} else {
 								router.push("/admin/login");
 							}
@@ -474,7 +462,6 @@ export default function SidebarAdmin() {
 				console.error("Error verificando autenticación o permisos:", error);
 				router.push("/admin/login");
 			} finally {
-				setIsLoading(false);
 			}
 		};
 		checkAuthAndFetchScreens();
@@ -531,43 +518,6 @@ export default function SidebarAdmin() {
 				</svg>
 			</button>
 
-			{/* Botón para colapsar/expandir en pantallas grandes */}
-			<button
-				type="button"
-				onClick={toggleCollapse}
-				className="fixed z-[60] text-gray-500 hover:text-gray-700 transition-all duration-200 hidden lg:block focus:outline-none"
-				style={{
-					left: isCollapsed ? "1.25rem" : "13.5rem",
-					top: isCollapsed ? "1rem" : "1.5rem",
-				}}
-				aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-			>
-				<svg
-					aria-hidden="true"
-					focusable="false"
-					className="w-6 h-6"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={1.3} />
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={1.3}
-						d="M9 5v14"
-					/>
-					<rect
-						x="4.6"
-						y="6.6"
-						width="3"
-						height="10.8"
-						rx="0.8"
-						className={`transition-opacity duration-200 ${isCollapsed ? "opacity-30" : "opacity-100"}`}
-					/>
-				</svg>
-			</button>
-
 			{/* Overlay para cerrar sidebar en mobile */}
 			{isOpen && (
 				<button
@@ -584,12 +534,9 @@ export default function SidebarAdmin() {
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				} lg:translate-x-0 lg:shadow-none ${isCollapsed ? "w-16" : "w-64"}`}
 			>
-				<div className="flex flex-col h-full p-4 space-y-4 bg-blue2">
+				<div className="flex flex-col h-full p-4 space-y-4 bg-gradient-to-b from-blue1 via-blue5 to-blue2">
 					{/* Header */}
-					<div className="flex items-center justify-between mb-2">
-						{!isCollapsed && (
-							<h2 className="text-2xl font-normal text-gray4">Admin Panel</h2>
-						)}
+					<div className="flex items-center justify-end lg:hidden">
 						<button
 							type="button"
 							onClick={() => setIsOpen(false)}
@@ -727,12 +674,55 @@ export default function SidebarAdmin() {
 						)}
 					</nav>
 
-					{/* Logout */}
-					<div className="border-t border-gray-200 pt-4">
+					{/* Controles inferiores */}
+					<div className="border-t border-blue4 pt-4 space-y-3">
+						<button
+							type="button"
+							onClick={toggleCollapse}
+							className={`hidden lg:flex w-full items-center gap-3 px-3 py-2 text-gray8 hover:text-white hover:bg-blue4 rounded transition-all duration-200 font-medium ${
+								isCollapsed ? "justify-center" : ""
+							}`}
+							aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+							title={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+						>
+							<svg
+								aria-hidden="true"
+								focusable="false"
+								className="w-5 h-5 flex-shrink-0"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<rect
+									x="3"
+									y="5"
+									width="18"
+									height="14"
+									rx="2"
+									strokeWidth={1.3}
+								/>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={1.3}
+									d="M9 5v14"
+								/>
+								<rect
+									x="4.6"
+									y="6.6"
+									width="3"
+									height="10.8"
+									rx="0.8"
+									className={`transition-opacity duration-200 ${isCollapsed ? "opacity-30" : "opacity-100"}`}
+								/>
+							</svg>
+							{!isCollapsed && <span>Colapsar sidebar</span>}
+						</button>
+
 						<button
 							type="button"
 							onClick={handleLogout}
-							className={`w-full flex items-center gap-3 px-4 pb-2 text-red-600 hover:text-red-700 hover:bg-red-56 rounded transition-all duration-200 font-medium ${
+							className={`w-full flex items-center gap-3 px-3 py-2 text-gold5 hover:text-white hover:bg-blue4 rounded transition-all duration-200 font-medium ${
 								isCollapsed ? "justify-center" : ""
 							}`}
 							title="Cerrar sesión"

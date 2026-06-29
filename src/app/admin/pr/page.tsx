@@ -164,26 +164,26 @@ export default function PRAdminPage() {
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case "healthy":
-				return <CheckCircle className="w-4 h-4 text-green-500" />;
+				return <CheckCircle className="w-4 h-4 text-blue6" />;
 			case "warning":
-				return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+				return <AlertTriangle className="w-4 h-4 text-gold3" />;
 			case "error":
-				return <XCircle className="w-4 h-4 text-red-500" />;
+				return <XCircle className="w-4 h-4 text-gold1" />;
 			default:
-				return <Activity className="w-4 h-4 text-gray-500" />;
+				return <Activity className="w-4 h-4 text-blue7" />;
 		}
 	};
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "active":
-				return "text-green-600 bg-green-100";
+				return "text-white bg-blue6";
 			case "inactive":
-				return "text-red-600 bg-red-100";
+				return "text-white bg-gold1";
 			case "maintenance":
-				return "text-yellow-600 bg-yellow-100";
+				return "text-white bg-gold2";
 			default:
-				return "text-gray-600 bg-gray-100";
+				return "text-white bg-blue7";
 		}
 	};
 
@@ -191,134 +191,126 @@ export default function PRAdminPage() {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Cargando panel PR...</p>
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue6 mx-auto mb-4"></div>
+					<p className="text-blue7">Cargando panel PR...</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="p-4 sm:p-6 dashboard-transition">
-			{/* Header */}
-			<div className="mb-6 sm:mb-8">
-				<div className="flex items-center gap-3 mb-2">
-					<div className="p-2 bg-orange-100 rounded-lg">
-						<Settings className="w-6 h-6 text-orange-600" />
-					</div>
-					<h1 className="text-2xl sm:text-3xl font-title text-gray-900 dashboard-text">
-						Panel Administrativo PR
-					</h1>
-				</div>
-				<p className="text-sm sm:text-base text-gray-600 dashboard-text">
-					Gestión y monitoreo del proyecto PR - pr.ingenit.cl
-				</p>
-			</div>
-
+		<div className="p-2 sm:p-3 lg:p-4">
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-				<div className="dashboard-card bg-white p-4 sm:p-6 rounded-md shadow-lg border border-gray-100">
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 					<div className="flex items-center justify-between">
 						<div className="min-w-0 flex-1">
-							<p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+							<p className="text-xs sm:text-sm font-medium text-blue7 truncate">
 								Total Proyectos
 							</p>
-							<p className="text-2xl sm:text-3xl font-bold text-gray-900 stats-number">
+							<p className="text-2xl sm:text-3xl font-bold text-blue1 stats-number">
 								{dashboardData.totalProjects}
 							</p>
 						</div>
-						<div className="p-2 sm:p-3 bg-orange-500/10 rounded-full flex-shrink-0 ml-3 mobile-icon-container">
-							<Database className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 mobile-icon" />
+						<div className="p-2 sm:p-3 bg-blue6 rounded-md flex-shrink-0 ml-3 mobile-icon-container">
+							<Database className="w-6 h-6 sm:w-8 sm:h-8 text-white mobile-icon" />
 						</div>
 					</div>
 				</div>
 
-				<div className="dashboard-card bg-white p-4 sm:p-6 rounded-md shadow-lg border border-gray-100">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
 					<div className="flex items-center justify-between">
 						<div className="min-w-0 flex-1">
-							<p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+							<p className="text-xs sm:text-sm font-medium text-blue7 truncate">
 								Proyectos Activos
 							</p>
-							<p className="text-2xl sm:text-3xl font-bold text-gray-900 stats-number">
+							<p className="text-2xl sm:text-3xl font-bold text-blue1 stats-number">
 								{dashboardData.activeProjects}
 							</p>
 						</div>
-						<div className="p-2 sm:p-3 bg-green-500/10 rounded-full flex-shrink-0 ml-3 mobile-icon-container">
-							<CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mobile-icon" />
+						<div className="p-2 sm:p-3 bg-blue5 rounded-md flex-shrink-0 ml-3 mobile-icon-container">
+							<CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white mobile-icon" />
 						</div>
 					</div>
 				</div>
 
-				<div className="dashboard-card bg-white p-4 sm:p-6 rounded-md shadow-lg border border-gray-100">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-gold6">
+					<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
 					<div className="flex items-center justify-between">
 						<div className="min-w-0 flex-1">
-							<p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+							<p className="text-xs sm:text-sm font-medium text-gold1 truncate">
 								En Mantenimiento
 							</p>
-							<p className="text-2xl sm:text-3xl font-bold text-gray-900 stats-number">
+							<p className="text-2xl sm:text-3xl font-bold text-gold stats-number">
 								{dashboardData.maintenanceProjects}
 							</p>
 						</div>
-						<div className="p-2 sm:p-3 bg-yellow-500/10 rounded-full flex-shrink-0 ml-3 mobile-icon-container">
-							<AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 mobile-icon" />
+						<div className="p-2 sm:p-3 bg-gold2 rounded-md flex-shrink-0 ml-3 mobile-icon-container">
+							<AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-white mobile-icon" />
 						</div>
 					</div>
 				</div>
 
-				<div className="dashboard-card bg-white p-4 sm:p-6 rounded-md shadow-lg border border-gray-100">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue7" />
 					<div className="flex items-center justify-between">
 						<div className="min-w-0 flex-1">
-							<p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+							<p className="text-xs sm:text-sm font-medium text-blue7 truncate">
 								Uptime
 							</p>
-							<p className="text-2xl sm:text-3xl font-bold text-gray-900 stats-number">
+							<p className="text-2xl sm:text-3xl font-bold text-blue1 stats-number">
 								{dashboardData.systemMetrics.uptime}%
 							</p>
 						</div>
-						<div className="p-2 sm:p-3 bg-blue-500/10 rounded-full flex-shrink-0 ml-3 mobile-icon-container">
-							<TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mobile-icon" />
+						<div className="p-2 sm:p-3 bg-blue7 rounded-md flex-shrink-0 ml-3 mobile-icon-container">
+							<TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-white mobile-icon" />
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* System Metrics */}
-			<div className="bg-white rounded-md shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-				<h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-					<Server className="w-5 h-5 text-orange-600" />
+			<div className="bg-white rounded-md shadow-lg border border-blue13 p-4 mb-4">
+				<h2 className="text-lg sm:text-xl font-semibold text-blue1 mb-4 flex items-center gap-2">
+					<Server className="w-5 h-5 text-blue6" />
 					Métricas del Sistema
 				</h2>
 				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-					<div className="text-center p-4 bg-gray-50 rounded-lg">
-						<p className="text-2xl font-bold text-gray-900">
+					<div className="relative overflow-hidden text-center p-4 bg-gray10 rounded-md border border-gray9">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
+						<p className="text-2xl font-bold text-blue1">
 							{dashboardData.systemMetrics.responseTime}ms
 						</p>
-						<p className="text-sm text-gray-600">Tiempo de Respuesta</p>
+						<p className="text-sm text-blue7">Tiempo de Respuesta</p>
 					</div>
-					<div className="text-center p-4 bg-gray-50 rounded-lg">
-						<p className="text-2xl font-bold text-gray-900">
+					<div className="relative overflow-hidden text-center p-4 bg-gray10 rounded-md border border-gray9">
+						<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
+						<p className="text-2xl font-bold text-gold">
 							{dashboardData.systemMetrics.errorRate}%
 						</p>
-						<p className="text-sm text-gray-600">Tasa de Error</p>
+						<p className="text-sm text-gold1">Tasa de Error</p>
 					</div>
-					<div className="text-center p-4 bg-gray-50 rounded-lg">
-						<p className="text-2xl font-bold text-gray-900">
+					<div className="relative overflow-hidden text-center p-4 bg-gray10 rounded-md border border-gray9">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue7" />
+						<p className="text-2xl font-bold text-blue1">
 							{dashboardData.systemMetrics.totalDeployments}
 						</p>
-						<p className="text-sm text-gray-600">Total Despliegues</p>
+						<p className="text-sm text-blue7">Total Despliegues</p>
 					</div>
 				</div>
 			</div>
 
 			{/* Navigation to Sub-sections */}
-			<div className="bg-white rounded-md shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-				<h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+			<div className="bg-white rounded-md shadow-lg border border-blue13 p-4 mb-4">
+				<h2 className="text-lg sm:text-xl font-semibold text-blue1 mb-4">
 					Módulos de Administración
 				</h2>
-				<div className="mb-6">
+				<div className="mb-4">
 					<div className="flex items-center gap-2 mb-3">
-						<Building2 className="w-5 h-5 text-orange-600" />
-						<h3 className="text-sm sm:text-base font-semibold text-gray-900">
+						<Building2 className="w-5 h-5 text-blue6" />
+						<h3 className="text-sm sm:text-base font-semibold text-blue2">
 							Empresa (módulo padre)
 						</h3>
 					</div>
@@ -326,11 +318,14 @@ export default function PRAdminPage() {
 						<button
 							type="button"
 							onClick={() => router.push("/admin/pr/companies")}
-							className="w-full p-4 bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-md border border-orange-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+							className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-blue13 hover:shadow-md text-left"
 						>
-							<Building2 className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-							<p className="text-sm font-medium text-gray-900">Empresas</p>
-							<p className="text-xs text-gray-600 mt-1">
+							<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
+							<div className="mb-3 inline-flex rounded-md bg-blue6 p-2 text-white">
+								<Building2 className="w-5 h-5" />
+							</div>
+							<p className="text-sm font-semibold text-blue1">Empresas</p>
+							<p className="text-xs text-blue7 mt-1">
 								Entrada principal a sus módulos dependientes
 							</p>
 						</button>
@@ -339,8 +334,8 @@ export default function PRAdminPage() {
 
 				<div>
 					<div className="flex items-center gap-2 mb-3">
-						<Server className="w-5 h-5 text-gray-600" />
-						<h3 className="text-sm sm:text-base font-semibold text-gray-900">
+						<Server className="w-5 h-5 text-gold2" />
+						<h3 className="text-sm sm:text-base font-semibold text-blue2">
 							Plataforma (transversal)
 						</h3>
 					</div>
@@ -348,11 +343,14 @@ export default function PRAdminPage() {
 						<button
 							type="button"
 							onClick={() => router.push("/admin/pr/analytics")}
-							className="w-full p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-md border border-purple-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+							className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-gold6 hover:shadow-md text-left"
 						>
-							<BarChart3 className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-							<p className="text-sm font-medium text-gray-900">Analytics</p>
-							<p className="text-xs text-gray-600 mt-1">
+							<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
+							<div className="mb-3 inline-flex rounded-md bg-gold2 p-2 text-white">
+								<BarChart3 className="w-5 h-5" />
+							</div>
+							<p className="text-sm font-semibold text-gold">Analytics</p>
+							<p className="text-xs text-gold1 mt-1">
 								Análisis y métricas globales
 							</p>
 						</button>
@@ -360,11 +358,14 @@ export default function PRAdminPage() {
 						<button
 							type="button"
 							onClick={() => router.push("/admin/pr/settings")}
-							className="w-full p-4 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 rounded-md border border-gray-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+							className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-blue13 hover:shadow-md text-left"
 						>
-							<Settings className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-							<p className="text-sm font-medium text-gray-900">Configuraciones</p>
-							<p className="text-xs text-gray-600 mt-1">
+							<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
+							<div className="mb-3 inline-flex rounded-md bg-blue5 p-2 text-white">
+								<Settings className="w-5 h-5" />
+							</div>
+							<p className="text-sm font-semibold text-blue1">Configuraciones</p>
+							<p className="text-xs text-blue7 mt-1">
 								Parámetros generales del sistema PR
 							</p>
 						</button>
@@ -373,59 +374,71 @@ export default function PRAdminPage() {
 			</div>
 
 			{/* Quick Actions */}
-			<div className="bg-white rounded-md shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-				<h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+			<div className="bg-white rounded-md shadow-lg border border-blue13 p-4 mb-4">
+				<h2 className="text-lg sm:text-xl font-semibold text-blue1 mb-4">
 					Acciones Rápidas
 				</h2>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<button
 						type="button"
 						onClick={() => window.open("https://pr.ingenit.cl", "_blank")}
-						className="w-full p-4 bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-md border border-orange-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+						className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-blue13 hover:shadow-md text-left"
 					>
-						<Globe className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-						<p className="text-sm font-medium text-gray-900">Sitio en Vivo</p>
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
+						<div className="mb-3 inline-flex rounded-md bg-blue6 p-2 text-white">
+							<Globe className="w-5 h-5" />
+						</div>
+						<p className="text-sm font-semibold text-blue1">Sitio en Vivo</p>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => console.log("Ver logs del sistema")}
-						className="w-full p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+						className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-blue13 hover:shadow-md text-left"
 					>
-						<Activity className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-						<p className="text-sm font-medium text-gray-900">Ver Logs</p>
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
+						<div className="mb-3 inline-flex rounded-md bg-blue5 p-2 text-white">
+							<Activity className="w-5 h-5" />
+						</div>
+						<p className="text-sm font-semibold text-blue1">Ver Logs</p>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => console.log("Configurar sistema")}
-						className="w-full p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-md border border-purple-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+						className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-gold6 hover:shadow-md text-left"
 					>
-						<Settings className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-						<p className="text-sm font-medium text-gray-900">Configuración</p>
+						<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
+						<div className="mb-3 inline-flex rounded-md bg-gold2 p-2 text-white">
+							<Settings className="w-5 h-5" />
+						</div>
+						<p className="text-sm font-semibold text-gold">Configuración</p>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => console.log("Ver estadísticas")}
-						className="w-full p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-md border border-green-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+						className="relative w-full overflow-hidden p-4 bg-gray10 hover:bg-white rounded-md border border-blue13 hover:shadow-md text-left"
 					>
-						<TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
-						<p className="text-sm font-medium text-gray-900">Estadísticas</p>
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue7" />
+						<div className="mb-3 inline-flex rounded-md bg-blue7 p-2 text-white">
+							<TrendingUp className="w-5 h-5" />
+						</div>
+						<p className="text-sm font-semibold text-blue1">Estadísticas</p>
 					</button>
 				</div>
 			</div>
 
 			{/* Recent Projects */}
-			<div className="bg-white rounded-md shadow-lg border border-gray-100 p-4 sm:p-6">
+			<div className="bg-white rounded-md shadow-lg border border-blue13 p-4">
 				<div className="flex items-center justify-between mb-4">
-					<h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+					<h2 className="text-lg sm:text-xl font-semibold text-blue1">
 						Proyectos Recientes
 					</h2>
 					<button
 						type="button"
 						onClick={() => setShowCreateModal(true)}
-						className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+						className="flex items-center gap-2 px-4 py-2 bg-blue6 text-white rounded-md hover:bg-blue5 transition-colors"
 					>
 						<Plus className="w-4 h-4" />
 						Nuevo Proyecto
@@ -436,14 +449,14 @@ export default function PRAdminPage() {
 						dashboardData.recentProjects.map((project) => (
 							<div
 								key={project.id}
-								className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-md"
+								className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue6 rounded-md text-white"
 							>
 								<div className="flex-shrink-0">
 									{getStatusIcon(project.health_status)}
 								</div>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 mb-1">
-										<p className="font-medium text-gray-900 text-sm sm:text-base truncate">
+										<p className="font-medium text-white text-sm sm:text-base truncate">
 											{project.name}
 										</p>
 										<span
@@ -452,7 +465,7 @@ export default function PRAdminPage() {
 											{project.status}
 										</span>
 									</div>
-									<p className="text-xs sm:text-sm text-gray-500">
+									<p className="text-xs sm:text-sm text-white/75">
 										Entorno: {project.environment} • Último despliegue:{" "}
 										{new Date(project.last_deployment).toLocaleString("es-CL")}
 									</p>
@@ -461,9 +474,9 @@ export default function PRAdminPage() {
 						))
 					) : (
 						<div className="text-center py-8">
-							<Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-							<p className="text-gray-500">No hay proyectos registrados</p>
-							<p className="text-sm text-gray-400">
+							<Database className="w-12 h-12 text-blue11 mx-auto mb-4" />
+							<p className="text-blue7">No hay proyectos registrados</p>
+							<p className="text-sm text-blue9">
 								Los proyectos aparecerán aquí cuando estén configurados
 							</p>
 						</div>

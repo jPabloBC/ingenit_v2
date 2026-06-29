@@ -264,10 +264,10 @@ export default function EditPRUserModal({
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
-					body: JSON.stringify({
-						id: user.id,
-						auth_id: user.auth_id || undefined,
-						first_name: firstName.trim(),
+				body: JSON.stringify({
+					id: user.id,
+					auth_id: user.auth_id || undefined,
+					first_name: firstName.trim(),
 					last_name: lastName.trim() || null,
 					email: email.trim(),
 					phone: phone.trim() || null,
@@ -321,36 +321,44 @@ export default function EditPRUserModal({
 		}
 	};
 
+	const labelClass = "block text-sm font-medium text-blue7 mb-1";
+	const fieldClass =
+		"w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6";
+	const disabledFieldClass =
+		"w-full px-3 py-2 border border-gray9 rounded-md bg-gray10 text-blue7";
+	const sectionClass = "rounded-md border border-gray9 bg-white p-4 shadow-sm";
+
 	return createPortal(
 		<div className="fixed inset-0 z-50 flex items-center justify-center">
 			<button
 				type="button"
-				className="absolute inset-0 bg-black/40"
+				className="absolute inset-0 bg-blue1/45"
 				onClick={() => !isSaving && onClose()}
 				onKeyDown={(e) => {
 					if ((e.key === "Enter" || e.key === " ") && !isSaving) onClose();
 				}}
 			/>
-			<div className="relative bg-white rounded-md shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-auto">
-				<div className="flex items-center justify-between px-14 sm:px-16 py-4 border-b">
-					<h3 className="text-lg font-semibold p-2 sm:px-4 sm:py-2">
+			<div className="relative bg-white rounded-md shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-auto border border-gray9">
+				<div className="flex min-h-14 items-center justify-between border-b border-gray9 bg-gray10 px-6 py-3">
+					<h3 className="text-sm font-semibold uppercase tracking-wide text-blue1">
 						Editar Usuario PR
 					</h3>
 					<button
 						type="button"
 						onClick={() => !isSaving && onClose()}
-						className="p-2 text-gray-600 hover:text-gray-800"
+						className="rounded-md p-2 text-blue7 hover:bg-white hover:text-blue6"
+						aria-label="Cerrar modal"
 					>
 						<X className="w-4 h-4" />
 					</button>
 				</div>
 
-				<form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+				<form onSubmit={handleSubmit} className="p-4 space-y-4">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-id"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								ID
 							</label>
@@ -358,13 +366,13 @@ export default function EditPRUserModal({
 								id="pr-user-id"
 								value={user.id}
 								disabled
-								className="w-full px-3 py-2 border rounded-md bg-gray-100"
+								className={disabledFieldClass}
 							/>
 						</div>
 						<div>
 							<label
 								htmlFor="pr-user-auth-id"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Auth ID
 							</label>
@@ -372,16 +380,16 @@ export default function EditPRUserModal({
 								id="pr-user-auth-id"
 								value={user.auth_id || ""}
 								disabled
-								className="w-full px-3 py-2 border rounded-md bg-gray-100"
+								className={disabledFieldClass}
 							/>
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-first-name"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Nombre
 							</label>
@@ -389,13 +397,13 @@ export default function EditPRUserModal({
 								id="pr-user-first-name"
 								value={firstName}
 								onChange={(e) => setFirstName(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							/>
 						</div>
 						<div>
 							<label
 								htmlFor="pr-user-email"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Correo
 							</label>
@@ -404,16 +412,16 @@ export default function EditPRUserModal({
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								type="email"
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							/>
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-last-name"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Apellido
 							</label>
@@ -421,13 +429,13 @@ export default function EditPRUserModal({
 								id="pr-user-last-name"
 								value={lastName}
 								onChange={(e) => setLastName(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							/>
 						</div>
 						<div>
 							<label
 								htmlFor="pr-user-document"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Documento
 							</label>
@@ -435,16 +443,16 @@ export default function EditPRUserModal({
 								id="pr-user-document"
 								value={documentValue}
 								onChange={(e) => setDocumentValue(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							/>
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-phone"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Teléfono
 							</label>
@@ -452,13 +460,13 @@ export default function EditPRUserModal({
 								id="pr-user-phone"
 								value={phone}
 								onChange={(e) => setPhone(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							/>
 						</div>
 						<div>
 							<label
 								htmlFor="pr-user-company"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Empresa
 							</label>
@@ -466,7 +474,7 @@ export default function EditPRUserModal({
 								id="pr-user-company"
 								value={companyId}
 								onChange={(e) => setCompanyId(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 								disabled={role === "dev"}
 							>
 								<option value="">-- Sin empresa --</option>
@@ -480,7 +488,7 @@ export default function EditPRUserModal({
 						<div>
 							<label
 								htmlFor="pr-user-project"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Proyecto
 							</label>
@@ -488,7 +496,7 @@ export default function EditPRUserModal({
 								id="pr-user-project"
 								value={projectId}
 								onChange={(e) => setProjectId(e.target.value)}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 								disabled={role === "dev" || !companyId}
 							>
 								<option value="">
@@ -507,11 +515,11 @@ export default function EditPRUserModal({
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-role"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Rol
 							</label>
@@ -521,7 +529,7 @@ export default function EditPRUserModal({
 								onChange={(e) =>
 									setRole(e.target.value as PRUserEditable["role"])
 								}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							>
 								<option value="user">Usuario</option>
 								<option value="admin">Administrador</option>
@@ -532,7 +540,7 @@ export default function EditPRUserModal({
 						<div>
 							<label
 								htmlFor="pr-user-status"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Estado
 							</label>
@@ -542,7 +550,7 @@ export default function EditPRUserModal({
 								onChange={(e) =>
 									setStatus(e.target.value as PRUserEditable["status"])
 								}
-								className="w-full px-3 py-2 border rounded-md"
+								className={fieldClass}
 							>
 								<option value="active">Activo</option>
 								<option value="inactive">Inactivo</option>
@@ -550,26 +558,26 @@ export default function EditPRUserModal({
 							</select>
 						</div>
 						<div className="flex items-end pb-2">
-							<label className="inline-flex items-center gap-2 text-sm text-gray-700">
+							<label className="inline-flex items-center gap-2 text-sm font-medium text-blue7">
 								<input
 									type="checkbox"
 									checked={isActive}
 									onChange={(e) => setIsActive(e.target.checked)}
-									className="rounded border-gray-300"
+									className="rounded border-gray9 accent-blue6"
 								/>
 								is_active
 							</label>
 						</div>
 					</div>
 
-					<div className="border rounded-md p-3 bg-amber-50">
+					<div className={sectionClass}>
 						<div className="flex items-center justify-between mb-2">
-							<h4 className="text-sm font-semibold text-gray-800">
+							<h4 className="text-sm font-semibold uppercase tracking-wide text-blue1">
 								Restablecer contraseña
 							</h4>
 							<button
 								type="button"
-								className="text-xs px-2 py-1 rounded border border-amber-300 bg-white hover:bg-amber-100"
+								className="text-xs font-medium px-3 py-1.5 rounded-md border border-blue13 bg-gray10 text-blue6 hover:border-blue6 hover:bg-white"
 								onClick={() => {
 									const generated = `Temp${Math.random().toString(36).slice(-8)}!`;
 									setNewPassword(generated);
@@ -582,7 +590,7 @@ export default function EditPRUserModal({
 							<div>
 								<label
 									htmlFor="pr-user-new-password"
-									className="block text-sm text-gray-700 mb-1"
+									className={labelClass}
 								>
 									Nueva contraseña
 								</label>
@@ -592,41 +600,41 @@ export default function EditPRUserModal({
 									value={newPassword}
 									onChange={(e) => setNewPassword(e.target.value)}
 									placeholder="Dejar vacío para no cambiar"
-									className="w-full px-3 py-2 border rounded-md"
+									className={fieldClass}
 								/>
 							</div>
 						</div>
-						<p className="text-xs text-gray-600 mt-2">
+						<p className="text-xs text-blue7 mt-2">
 							Si completas estos campos, se actualizará la contraseña en
 							Authentication.
 						</p>
 					</div>
 
-					<div className="border rounded-md p-3 bg-gray-50">
+					<div className={sectionClass}>
 						<div className="flex items-center justify-between mb-2">
-							<h4 className="text-sm font-semibold text-gray-800">
+							<h4 className="text-sm font-semibold uppercase tracking-wide text-blue1">
 								Accesos PR (pr_user_permissions)
 							</h4>
 							{role === "dev" ? (
-								<span className="text-xs text-gray-500">
+								<span className="text-xs text-blue7">
 									Dev tiene acceso total
 								</span>
 							) : !companyId ? (
-								<span className="text-xs text-amber-600">
+								<span className="text-xs text-gold1">
 									Selecciona empresa para gestionar permisos
 								</span>
 							) : null}
 						</div>
 						{permissionsLoading ? (
-							<p className="text-sm text-gray-500">Cargando permisos...</p>
+							<p className="text-sm text-blue7">Cargando permisos...</p>
 						) : permissionsError ? (
-							<p className="text-sm text-red-600">{permissionsError}</p>
+							<p className="text-sm text-gold1">{permissionsError}</p>
 						) : role === "dev" || !companyId ? (
-							<p className="text-sm text-gray-500">
+							<p className="text-sm text-blue7">
 								No aplica edición de permisos para este usuario.
 							</p>
 						) : availablePermissions.length === 0 ? (
-							<p className="text-sm text-gray-500">
+							<p className="text-sm text-blue7">
 								No hay recursos disponibles para asignar.
 							</p>
 						) : (
@@ -636,7 +644,7 @@ export default function EditPRUserModal({
 									return (
 										<label
 											key={resourceKey}
-											className="inline-flex items-center gap-2 text-sm text-gray-700"
+											className="inline-flex items-center gap-2 text-sm text-blue1 border border-gray9 rounded-md px-3 py-2 hover:bg-gray10"
 										>
 											<input
 												type="checkbox"
@@ -652,7 +660,7 @@ export default function EditPRUserModal({
 														);
 													}
 												}}
-												className="rounded border-gray-300"
+												className="rounded border-gray9 accent-blue6"
 											/>
 											<span>
 												{PR_RESOURCE_LABELS[resourceKey] || resourceKey}
@@ -664,11 +672,11 @@ export default function EditPRUserModal({
 						)}
 					</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						<div>
 							<label
 								htmlFor="pr-user-created"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Creado
 							</label>
@@ -680,13 +688,13 @@ export default function EditPRUserModal({
 										: ""
 								}
 								disabled
-								className="w-full px-3 py-2 border rounded-md bg-gray-100"
+								className={disabledFieldClass}
 							/>
 						</div>
 						<div>
 							<label
 								htmlFor="pr-user-updated"
-								className="block text-sm text-gray-700 mb-1"
+								className={labelClass}
 							>
 								Actualizado
 							</label>
@@ -698,26 +706,30 @@ export default function EditPRUserModal({
 										: ""
 								}
 								disabled
-								className="w-full px-3 py-2 border rounded-md bg-gray-100"
+								className={disabledFieldClass}
 							/>
 						</div>
 					</div>
 
-					{error && <div className="text-sm text-red-600">{error}</div>}
+					{error && (
+						<div className="rounded-md border border-gold6 bg-white px-4 py-3 text-sm text-gold">
+							{error}
+						</div>
+					)}
 
-					<div className="flex items-center justify-end gap-2">
+					<div className="flex items-center justify-end gap-3 border-t border-gray9 pt-4">
 						<button
 							type="button"
 							onClick={onClose}
 							disabled={isSaving}
-							className="px-4 py-2 bg-gray-100 rounded-md"
+							className="px-4 py-2 rounded-md border border-gray9 bg-white text-blue7 hover:text-blue6 hover:shadow-sm disabled:opacity-50"
 						>
 							Cancelar
 						</button>
 						<button
 							type="submit"
 							disabled={isSaving}
-							className="px-4 py-2 bg-orange-600 text-white rounded-md flex items-center gap-2"
+							className="px-4 py-2 bg-blue6 text-white rounded-md flex items-center gap-2 hover:bg-blue5 disabled:opacity-50"
 						>
 							{isSaving ? (
 								"Guardando..."

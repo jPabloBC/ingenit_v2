@@ -182,42 +182,42 @@ export default function PRProjectsPage() {
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "active":
-				return "text-green-600 bg-green-100";
+				return "text-white bg-blue6";
 			case "inactive":
-				return "text-red-600 bg-red-100";
+				return "text-white bg-gold1";
 			case "maintenance":
-				return "text-yellow-600 bg-yellow-100";
+				return "text-white bg-gold2";
 			default:
-				return "text-gray-600 bg-gray-100";
+				return "text-white bg-blue7";
 		}
 	};
 
 	const getEnvironmentColor = (environment: string) => {
 		switch (environment) {
 			case "production":
-				return "text-red-600 bg-red-100";
+				return "text-white bg-blue4";
 			case "qa":
 			case "uat":
-				return "text-teal-700 bg-teal-100";
+				return "text-white bg-blue6";
 			case "staging":
-				return "text-yellow-600 bg-yellow-100";
+				return "text-white bg-blue5";
 			case "sandbox":
-				return "text-sky-700 bg-sky-100";
+				return "text-white bg-blue7";
 			case "demo":
 			case "training":
-				return "text-violet-700 bg-violet-100";
+				return "text-white bg-gold2";
 			case "pilot":
-				return "text-emerald-700 bg-emerald-100";
+				return "text-white bg-blue8";
 			case "dr":
-				return "text-fuchsia-700 bg-fuchsia-100";
+				return "text-white bg-gold1";
 			case "mining":
-				return "text-amber-700 bg-amber-100";
+				return "text-white bg-gold3";
 			case "industrial":
-				return "text-slate-700 bg-slate-100";
+				return "text-white bg-blue7";
 			case "development":
-				return "text-blue-600 bg-blue-100";
+				return "text-white bg-blue6";
 			default:
-				return "text-gray-600 bg-gray-100";
+				return "text-white bg-blue7";
 		}
 	};
 
@@ -262,13 +262,13 @@ export default function PRProjectsPage() {
 	const getHealthIcon = (health: string) => {
 		switch (health) {
 			case "healthy":
-				return <CheckCircle className="w-4 h-4 text-green-500" />;
+				return <CheckCircle className="w-4 h-4 text-blue6" />;
 			case "warning":
-				return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+				return <AlertTriangle className="w-4 h-4 text-gold2" />;
 			case "error":
-				return <XCircle className="w-4 h-4 text-red-500" />;
+				return <XCircle className="w-4 h-4 text-gold1" />;
 			default:
-				return <Activity className="w-4 h-4 text-gray-500" />;
+				return <Activity className="w-4 h-4 text-blue7" />;
 		}
 	};
 
@@ -276,18 +276,17 @@ export default function PRProjectsPage() {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Cargando proyectos...</p>
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue6 mx-auto mb-4"></div>
+					<p className="text-blue7">Cargando proyectos...</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="p-4 sm:p-6">
-			{/* Header */}
-			<div className="mb-6 sm:mb-8">
-				{companyIdFromUrl ? (
+		<div className="relative p-2 sm:p-3 lg:p-4">
+			{companyIdFromUrl ? (
+				<div className="mb-4 flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => {
@@ -295,69 +294,78 @@ export default function PRProjectsPage() {
 						}}
 						aria-label="Volver a empresas"
 						title="Volver"
-						className="inline-flex items-center text-gray-300 hover:text-orange-600 transition-colors mb-3"
+						className="inline-flex items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-blue7 hover:text-blue6 hover:shadow-sm"
 					>
-						<ChevronLeft className="w-7 h-7" />
+						<ChevronLeft className="w-5 h-5" />
+						<span className="text-sm font-medium">Volver</span>
 					</button>
-				) : null}
-				<div className="flex items-center gap-3 mb-2">
-					<div className="p-2 bg-orange-100 rounded-lg">
-						<FolderOpen className="w-6 h-6 text-orange-600" />
-					</div>
-					<h1 className="text-2xl sm:text-3xl font-title text-gray-900">
-						Gestión de Proyectos PR
-					</h1>
 				</div>
-				<p className="text-sm sm:text-base text-gray-600">
-					Administra los proyectos y deployments del ecosistema PR
-				</p>
-			</div>
+			) : null}
+
+			<button
+				type="button"
+				onClick={() => {
+					setEditingProject(null);
+					setShowCreateModal(true);
+				}}
+				className="fixed right-5 top-[94px] z-40 flex h-16 w-16 items-center justify-center rounded-full border border-blue8 bg-blue5 text-blue15 shadow-lg hover:bg-blue4"
+				aria-label="Nuevo proyecto"
+				title="Nuevo proyecto"
+			>
+				<Plus className="h-9 w-9" />
+			</button>
 
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-				<div className="bg-white p-4 rounded-lg shadow border">
+			<div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">
-								Total Proyectos
-							</p>
-							<p className="text-2xl font-bold text-gray-900">
-								{projects.length}
-							</p>
+							<p className="text-sm font-medium text-blue7">Total Proyectos</p>
+							<p className="text-2xl font-bold text-blue1">{projects.length}</p>
 						</div>
-						<FolderOpen className="w-8 h-8 text-orange-600" />
+						<div className="p-3 bg-blue6 rounded-md">
+							<FolderOpen className="w-7 h-7 text-white" />
+						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-4 rounded-lg shadow border">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">Activos</p>
-							<p className="text-2xl font-bold text-green-600">
+							<p className="text-sm font-medium text-blue7">Activos</p>
+							<p className="text-2xl font-bold text-blue1">
 								{projects.filter((p) => p.status === "active").length}
 							</p>
 						</div>
-						<CheckCircle className="w-8 h-8 text-green-600" />
+						<div className="p-3 bg-blue5 rounded-md">
+							<CheckCircle className="w-7 h-7 text-white" />
+						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-4 rounded-lg shadow border">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-blue13">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue4" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">Producción</p>
-							<p className="text-2xl font-bold text-red-600">
+							<p className="text-sm font-medium text-blue7">Producción</p>
+							<p className="text-2xl font-bold text-blue1">
 								{projects.filter((p) => p.environment === "production").length}
 							</p>
 						</div>
-						<Globe className="w-8 h-8 text-red-600" />
+						<div className="p-3 bg-blue4 rounded-md">
+							<Globe className="w-7 h-7 text-white" />
+						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-4 rounded-lg shadow border">
+				<div className="relative overflow-hidden bg-white p-4 rounded-md shadow-md border border-gold6">
+					<div className="absolute inset-x-0 top-0 h-1 bg-gold2" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">Con Problemas</p>
-							<p className="text-2xl font-bold text-yellow-600">
+							<p className="text-sm font-medium text-gold1">Con Problemas</p>
+							<p className="text-2xl font-bold text-gold">
 								{
 									projects.filter(
 										(p) =>
@@ -367,40 +375,42 @@ export default function PRProjectsPage() {
 								}
 							</p>
 						</div>
-						<AlertTriangle className="w-8 h-8 text-yellow-600" />
+						<div className="p-3 bg-gold2 rounded-md">
+							<AlertTriangle className="w-7 h-7 text-white" />
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Filters and Search */}
-			<div className="bg-white rounded-lg shadow border p-4 mb-6">
-				<div className="flex flex-col sm:flex-row gap-4">
+			<div className="bg-white rounded-md shadow-sm border border-gray9 p-4 mb-4">
+				<div className="flex flex-col lg:flex-row gap-4">
 					<div className="flex-1">
 						<div className="relative">
-							<Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+							<Search className="w-4 h-4 text-blue7 absolute left-3 top-1/2 transform -translate-y-1/2" />
 							<input
 								type="text"
 								placeholder="Buscar proyectos..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full pl-10 pr-4 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 							/>
 						</div>
 					</div>
 
-					<div className="flex gap-2">
+					<div className="flex flex-col sm:flex-row gap-3">
 						{isCompanyContextLocked ? (
 							<input
 								value={selectedCompanyName || "Empresa seleccionada"}
 								disabled
-								className="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 min-w-[260px]"
+								className="px-3 py-2 border border-gray9 rounded-md bg-gray10 text-blue7 min-w-[260px]"
 								aria-label="Empresa seleccionada"
 							/>
 						) : (
 							<select
 								value={selectedCompanyId}
 								onChange={(e) => setSelectedCompanyId(e.target.value)}
-								className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 							>
 								<option value="all">Todas las empresas</option>
 								{companies.map((c) => (
@@ -414,7 +424,7 @@ export default function PRProjectsPage() {
 						<select
 							value={filterStatus}
 							onChange={(e) => setFilterStatus(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+							className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 						>
 							<option value="all">Todos los estados</option>
 							<option value="active">Activos</option>
@@ -425,7 +435,7 @@ export default function PRProjectsPage() {
 						<select
 							value={filterEnvironment}
 							onChange={(e) => setFilterEnvironment(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+							className="px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/20 focus:border-blue6"
 						>
 							<option value="all">Todos los entornos</option>
 							<option value="development">Desarrollo</option>
@@ -441,40 +451,31 @@ export default function PRProjectsPage() {
 							<option value="industrial">Industrial</option>
 							<option value="production">Producción</option>
 						</select>
-
-						<button
-							type="button"
-							onClick={() => {
-								setEditingProject(null);
-								setShowCreateModal(true);
-							}}
-							className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center gap-2"
-						>
-							<Plus className="w-4 h-4" />
-							Nuevo Proyecto
-						</button>
 					</div>
 				</div>
 			</div>
 
 			{loadError ? (
-				<div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+				<div className="mb-4 rounded-md border border-gold6 bg-white px-4 py-3 text-sm text-gold">
 					{loadError}
 				</div>
 			) : null}
 
 			{/* Projects Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{filteredProjects.map((project) => (
 					<div
 						key={project.id}
-						className="bg-white rounded-lg shadow border hover:shadow-lg transition-shadow"
+						className="relative overflow-hidden bg-white rounded-md shadow-sm border border-gray9 hover:shadow-md transition-shadow"
 					>
-						<div className="p-6">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
+						<div className="p-4">
 							<div className="flex items-center justify-between mb-4">
 								<div className="flex items-center gap-2">
-									<FolderOpen className="w-5 h-5 text-orange-600" />
-									<h3 className="font-semibold text-gray-900">
+									<div className="h-10 w-10 rounded-md bg-blue6 flex items-center justify-center">
+										<FolderOpen className="w-5 h-5 text-white" />
+									</div>
+									<h3 className="font-semibold text-blue1">
 										{project.name}
 									</h3>
 								</div>
@@ -482,7 +483,7 @@ export default function PRProjectsPage() {
 							</div>
 
 							{project.description && (
-								<p className="text-sm text-gray-600 mb-4 line-clamp-2">
+								<p className="text-sm text-gray4 mb-4 line-clamp-2">
 									{project.description}
 								</p>
 							)}
@@ -506,8 +507,8 @@ export default function PRProjectsPage() {
 									project.comuna ||
 									project.region ||
 									project.country) && (
-									<div className="flex items-center gap-2 text-sm text-gray-600">
-										<MapPin className="w-4 h-4" />
+									<div className="flex items-center gap-2 text-sm text-gray4">
+										<MapPin className="w-4 h-4 text-blue7" />
 										<span className="truncate">
 											{[
 												project.address,
@@ -521,26 +522,26 @@ export default function PRProjectsPage() {
 									</div>
 								)}
 								{project.deployment_url && (
-									<div className="flex items-center gap-2 text-sm text-gray-600">
-										<Globe className="w-4 h-4" />
+									<div className="flex items-center gap-2 text-sm text-gray4">
+										<Globe className="w-4 h-4 text-blue7" />
 										<a
 											href={project.deployment_url}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="hover:text-orange-600 truncate"
+											className="hover:text-blue6 truncate"
 										>
 											{project.deployment_url}
 										</a>
 									</div>
 								)}
 								{project.repository_url && (
-									<div className="flex items-center gap-2 text-sm text-gray-600">
-										<GitBranch className="w-4 h-4" />
+									<div className="flex items-center gap-2 text-sm text-gray4">
+										<GitBranch className="w-4 h-4 text-blue7" />
 										<a
 											href={project.repository_url}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="hover:text-orange-600 truncate"
+											className="hover:text-blue6 truncate"
 										>
 											Repository
 										</a>
@@ -548,7 +549,7 @@ export default function PRProjectsPage() {
 								)}
 							</div>
 
-							<div className="text-xs text-gray-500 mb-4">
+							<div className="text-xs text-gray5 mb-4">
 								{project.last_deployment ? (
 									<>
 										Último deploy:{" "}
@@ -570,68 +571,70 @@ export default function PRProjectsPage() {
 											setEditingProject(project);
 											setShowCreateModal(true);
 										}}
-										className="text-blue-600 hover:text-blue-800 p-1"
+										className="text-blue6 hover:text-blue5 p-1"
 									>
 										<Edit className="w-4 h-4" />
 									</button>
 									<button
 										type="button"
-										className="text-red-600 hover:text-red-800 p-1"
+										className="text-gold1 hover:text-gold p-1"
 									>
 										<Trash2 className="w-4 h-4" />
 									</button>
 								</div>
-								<div className="text-xs text-gray-400">ID: {project.id}</div>
+								<div className="text-xs text-gray6">ID: {project.id}</div>
 							</div>
 
-								<div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-									<button
-										type="button"
-										onClick={() => {
-											const params = new URLSearchParams();
-											if (project.company_id) {
-												params.set("company_id", project.company_id);
-											}
-											params.set("project_id", project.id);
-											window.location.href = `/admin/pr/users?${params.toString()}`;
-										}}
-										className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors text-left"
-									>
-										<p className="text-sm font-medium text-gray-900">Usuarios</p>
-										<p className="text-xs text-gray-600 mt-0.5">
-											Asignación por proyecto
-										</p>
-									</button>
-									<button
-										type="button"
-										onClick={() => {
-											const params = new URLSearchParams();
-											if (project.company_id) {
-												params.set("company_id", project.company_id);
-											}
-											params.set("project_id", project.id);
-											window.location.href = `/admin/pr/access?${params.toString()}`;
-										}}
-										className="w-full p-3 bg-indigo-50 hover:bg-indigo-100 rounded-md border border-indigo-200 transition-colors text-left"
-									>
-										<p className="text-sm font-medium text-gray-900">Accesos</p>
-										<p className="text-xs text-gray-600 mt-0.5">
-											Permisos por proyecto
-										</p>
-									</button>
-								</div>
+							<div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+								<button
+									type="button"
+									onClick={() => {
+										const params = new URLSearchParams();
+										if (project.company_id) {
+											params.set("company_id", project.company_id);
+										}
+										params.set("project_id", project.id);
+										window.location.href = `/admin/pr/users?${params.toString()}`;
+									}}
+									className="relative w-full overflow-hidden p-3 bg-gray10 hover:bg-white rounded-md border border-blue13 transition-colors text-left"
+								>
+									<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
+									<p className="text-sm font-medium text-blue1">Usuarios</p>
+									<p className="text-xs text-blue7 mt-0.5">
+										Asignación por proyecto
+									</p>
+								</button>
+								<button
+									type="button"
+									onClick={() => {
+										const params = new URLSearchParams();
+										if (project.company_id) {
+											params.set("company_id", project.company_id);
+										}
+										params.set("project_id", project.id);
+										window.location.href = `/admin/pr/access?${params.toString()}`;
+									}}
+									className="relative w-full overflow-hidden p-3 bg-gray10 hover:bg-white rounded-md border border-blue13 transition-colors text-left"
+								>
+									<div className="absolute inset-x-0 top-0 h-1 bg-blue5" />
+									<p className="text-sm font-medium text-blue1">Accesos</p>
+									<p className="text-xs text-blue7 mt-0.5">
+										Permisos por proyecto
+									</p>
+								</button>
 							</div>
 						</div>
-					))}
+					</div>
+				))}
 			</div>
 
 			{filteredProjects.length === 0 && (
-				<div className="text-center py-12">
-					<FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-					<p className="text-gray-500 text-lg mb-2">
+				<div className="bg-white rounded-md border border-gray9 p-10 text-center shadow-sm">
+					<FolderOpen className="w-16 h-16 text-blue11 mx-auto mb-4" />
+					<p className="text-blue1 text-lg font-medium mb-2">
 						No se encontraron proyectos
 					</p>
-					<p className="text-sm text-gray-400">
+					<p className="text-sm text-blue7">
 						{searchTerm || filterStatus !== "all" || filterEnvironment !== "all"
 							? "Intenta ajustar los filtros de búsqueda"
 							: "Los proyectos aparecerán aquí cuando se creen"}
