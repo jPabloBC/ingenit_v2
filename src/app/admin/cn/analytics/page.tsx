@@ -2,7 +2,6 @@
 import {
 	Activity,
 	ArrowLeft,
-	BarChart3,
 	Calendar,
 	Database,
 	TrendingDown,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 interface AnalyticsData {
 	userGrowth: {
@@ -55,24 +53,24 @@ export default function CNAnalyticsPage() {
 			setIsLoading(true);
 			console.log("📊 Cargando analíticas CN...");
 
-			// Cargar usuarios
-			const { data: users, error } = await supabase
-				.from("cn_users")
-				.select("*");
-
-			if (error) {
-				console.error("❌ Error cargando datos:", error);
-				if (
-					error.code === "PGRST116" ||
-					error.message?.includes("relation") ||
-					error.message?.includes("does not exist")
-				) {
-					console.log("📋 Tabla cn_users no existe");
-					setIsLoading(false);
-					return;
-				}
+			const res = await fetch("/api/admin/cn/users", { cache: "no-store" });
+			const payload = await res.json().catch(() => null);
+			if (!res.ok) {
+				console.error("Error cargando analíticas CN desde admin API:", payload);
+				setAnalytics({
+					userGrowth: { current: 0, previous: 0, change: 0 },
+					activityMetrics: {
+						dailyActiveUsers: 0,
+						weeklyActiveUsers: 0,
+						monthlyActiveUsers: 0,
+					},
+					registrationTrend: [],
+					statusDistribution: { active: 0, inactive: 0, pending: 0 },
+				});
+				return;
 			}
 
+			const users = payload?.users || [];
 			if (users && users.length > 0) {
 				// Calcular distribución de estados
 				const statusDist = {
@@ -155,38 +153,29 @@ export default function CNAnalyticsPage() {
 	}, [loadAnalytics]);
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-				{/* Header */}
-				<div className="mb-6 sm:mb-8">
-					<div className="flex items-center gap-3 mb-4">
+		<div className="min-h-screen bg-gray10 p-2 sm:p-3 lg:p-4">
+			<div className="w-full max-w-none">
+				<div className="mb-4">
+					<div className="mb-4 flex items-center justify-start">
 						<button
 							type="button"
 							onClick={() => router.push("/admin/cn")}
-							className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+							className="inline-flex items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-sm font-medium text-gray3 shadow-sm transition-colors duration-200 hover:bg-gray10 hover:text-gray1"
 						>
-							<ArrowLeft className="w-5 h-5 text-gray-600" />
+							<ArrowLeft className="h-4 w-4" />
+							Volver atrás
 						</button>
-						<div>
-							<h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-								<BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-600" />
-								Analíticas CN
-							</h1>
-							<p className="text-sm sm:text-base text-gray-600 mt-1">
-								Estadísticas y métricas de cn.ingenit.cl
-							</p>
-						</div>
 					</div>
 
 					{/* Date Range Filter */}
-					<div className="flex gap-2">
+					<div className="flex gap-2 rounded-md border border-gray9 bg-white p-4 shadow-sm">
 						<button
 							type="button"
 							onClick={() => setDateRange("7")}
-							className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+							className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
 								dateRange === "7"
-									? "bg-cyan-600 text-white"
-									: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+									? "bg-blue6 text-white"
+									: "border border-gray9 bg-gray10 text-gray3 hover:bg-white"
 							}`}
 						>
 							7 días
@@ -194,10 +183,10 @@ export default function CNAnalyticsPage() {
 						<button
 							type="button"
 							onClick={() => setDateRange("30")}
-							className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+							className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
 								dateRange === "30"
-									? "bg-cyan-600 text-white"
-									: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+									? "bg-blue6 text-white"
+									: "border border-gray9 bg-gray10 text-gray3 hover:bg-white"
 							}`}
 						>
 							30 días
@@ -205,10 +194,10 @@ export default function CNAnalyticsPage() {
 						<button
 							type="button"
 							onClick={() => setDateRange("90")}
-							className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+							className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
 								dateRange === "90"
-									? "bg-cyan-600 text-white"
-									: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+									? "bg-blue6 text-white"
+									: "border border-gray9 bg-gray10 text-gray3 hover:bg-white"
 							}`}
 						>
 							90 días
@@ -218,97 +207,100 @@ export default function CNAnalyticsPage() {
 
 				{isLoading ? (
 					<div className="flex items-center justify-center py-12">
-						<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+						<div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue6"></div>
 					</div>
 				) : (
 					<>
 						{/* Growth Metrics */}
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+						<div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							{/* User Growth */}
-							<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+							<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+								<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 								<div className="flex items-center justify-between mb-4">
-									<h3 className="text-sm font-medium text-gray-600">
+									<h3 className="text-sm font-medium text-gray4">
 										Crecimiento Usuarios
 									</h3>
 									{analytics.userGrowth.change >= 0 ? (
-										<TrendingUp className="w-5 h-5 text-green-600" />
+										<TrendingUp className="h-5 w-5 text-green2" />
 									) : (
-										<TrendingDown className="w-5 h-5 text-red-600" />
+										<TrendingDown className="h-5 w-5 text-gold2" />
 									)}
 								</div>
 								<div className="flex items-baseline gap-2">
-									<span className="text-3xl font-bold text-gray-900">
+									<span className="text-3xl font-bold text-gray1">
 										{analytics.userGrowth.current}
 									</span>
 									<span
 										className={`text-sm font-medium ${
 											analytics.userGrowth.change >= 0
-												? "text-green-600"
-												: "text-red-600"
+												? "text-green2"
+												: "text-gold2"
 										}`}
 									>
 										{analytics.userGrowth.change >= 0 ? "+" : ""}
 										{analytics.userGrowth.change}%
 									</span>
 								</div>
-								<p className="text-xs text-gray-500 mt-2">
+								<p className="mt-2 text-xs text-gray5">
 									vs período anterior ({analytics.userGrowth.previous} usuarios)
 								</p>
 							</div>
 
 							{/* Daily Active Users */}
-							<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+							<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+								<div className="absolute inset-x-0 top-0 h-1 bg-green2" />
 								<div className="flex items-center justify-between mb-4">
-									<h3 className="text-sm font-medium text-gray-600">
+									<h3 className="text-sm font-medium text-gray4">
 										Usuarios Activos Diarios
 									</h3>
-									<Activity className="w-5 h-5 text-blue-600" />
+									<Activity className="h-5 w-5 text-green2" />
 								</div>
 								<div className="flex items-baseline gap-2">
-									<span className="text-3xl font-bold text-gray-900">
+									<span className="text-3xl font-bold text-gray1">
 										{analytics.activityMetrics.dailyActiveUsers}
 									</span>
 								</div>
-								<p className="text-xs text-gray-500 mt-2">Últimas 24 horas</p>
+								<p className="mt-2 text-xs text-gray5">Últimas 24 horas</p>
 							</div>
 
 							{/* Weekly Active Users */}
-							<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+							<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+								<div className="absolute inset-x-0 top-0 h-1 bg-gold3" />
 								<div className="flex items-center justify-between mb-4">
-									<h3 className="text-sm font-medium text-gray-600">
+									<h3 className="text-sm font-medium text-gray4">
 										Usuarios Activos Semanales
 									</h3>
-									<Calendar className="w-5 h-5 text-purple-600" />
+									<Calendar className="h-5 w-5 text-gold2" />
 								</div>
 								<div className="flex items-baseline gap-2">
-									<span className="text-3xl font-bold text-gray-900">
+									<span className="text-3xl font-bold text-gray1">
 										{analytics.activityMetrics.weeklyActiveUsers}
 									</span>
 								</div>
-								<p className="text-xs text-gray-500 mt-2">Últimos 7 días</p>
+								<p className="mt-2 text-xs text-gray5">Últimos 7 días</p>
 							</div>
 						</div>
 
 						{/* Charts */}
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+						<div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
 							{/* Registration Trend */}
-							<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">
+							<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+								<h3 className="mb-4 text-lg font-semibold text-gray1">
 									Tendencia de Registros
 								</h3>
 								<div className="space-y-3">
 									{analytics.registrationTrend.map((day) => (
 										<div key={day.date} className="flex items-center gap-3">
-											<span className="text-xs text-gray-500 w-24">
+											<span className="w-24 text-xs text-gray5">
 												{new Date(day.date).toLocaleDateString("es-CL", {
 													month: "short",
 													day: "numeric",
 												})}
 											</span>
 											<div className="flex-1">
-												<div className="h-8 bg-gray-100 rounded-md overflow-hidden">
+												<div className="h-8 overflow-hidden rounded-md bg-gray10">
 													<div
-														className="h-full bg-cyan-600 transition-all duration-300"
+														className="h-full bg-blue6 transition-all duration-300"
 														style={{
 															width: `${
 																day.count > 0
@@ -326,7 +318,7 @@ export default function CNAnalyticsPage() {
 													/>
 												</div>
 											</div>
-											<span className="text-sm font-medium text-gray-900 w-8 text-right">
+											<span className="w-8 text-right text-sm font-medium text-gray1">
 												{day.count}
 											</span>
 										</div>
@@ -335,24 +327,24 @@ export default function CNAnalyticsPage() {
 							</div>
 
 							{/* Status Distribution */}
-							<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">
+							<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+								<h3 className="mb-4 text-lg font-semibold text-gray1">
 									Distribución por Estado
 								</h3>
 								<div className="space-y-4">
 									<div>
 										<div className="flex items-center justify-between mb-2">
-											<span className="text-sm text-gray-600 flex items-center gap-2">
-												<div className="w-3 h-3 bg-green-500 rounded-full"></div>
+											<span className="flex items-center gap-2 text-sm text-gray4">
+												<div className="h-3 w-3 rounded-full bg-green2"></div>
 												Activos
 											</span>
-											<span className="text-sm font-semibold text-gray-900">
+											<span className="text-sm font-semibold text-gray1">
 												{analytics.statusDistribution.active}
 											</span>
 										</div>
-										<div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+										<div className="h-2 overflow-hidden rounded-full bg-gray10">
 											<div
-												className="h-full bg-green-500"
+												className="h-full bg-green2"
 												style={{
 													width: `${
 														(analytics.statusDistribution.active /
@@ -368,17 +360,17 @@ export default function CNAnalyticsPage() {
 
 									<div>
 										<div className="flex items-center justify-between mb-2">
-											<span className="text-sm text-gray-600 flex items-center gap-2">
-												<div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+											<span className="flex items-center gap-2 text-sm text-gray4">
+												<div className="h-3 w-3 rounded-full bg-gold3"></div>
 												Pendientes
 											</span>
-											<span className="text-sm font-semibold text-gray-900">
+											<span className="text-sm font-semibold text-gray1">
 												{analytics.statusDistribution.pending}
 											</span>
 										</div>
-										<div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+										<div className="h-2 overflow-hidden rounded-full bg-gray10">
 											<div
-												className="h-full bg-yellow-500"
+												className="h-full bg-gold3"
 												style={{
 													width: `${
 														(analytics.statusDistribution.pending /
@@ -394,17 +386,17 @@ export default function CNAnalyticsPage() {
 
 									<div>
 										<div className="flex items-center justify-between mb-2">
-											<span className="text-sm text-gray-600 flex items-center gap-2">
-												<div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+											<span className="flex items-center gap-2 text-sm text-gray4">
+												<div className="h-3 w-3 rounded-full bg-gray6"></div>
 												Inactivos
 											</span>
-											<span className="text-sm font-semibold text-gray-900">
+											<span className="text-sm font-semibold text-gray1">
 												{analytics.statusDistribution.inactive}
 											</span>
 										</div>
-										<div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+										<div className="h-2 overflow-hidden rounded-full bg-gray10">
 											<div
-												className="h-full bg-gray-500"
+												className="h-full bg-gray6"
 												style={{
 													width: `${
 														(analytics.statusDistribution.inactive /
@@ -419,12 +411,12 @@ export default function CNAnalyticsPage() {
 									</div>
 								</div>
 
-								<div className="mt-6 pt-6 border-t border-gray-200">
+								<div className="mt-6 border-t border-gray9 pt-6">
 									<div className="flex items-center justify-between">
-										<span className="text-sm font-medium text-gray-600">
+										<span className="text-sm font-medium text-gray4">
 											Total Usuarios
 										</span>
-										<span className="text-2xl font-bold text-gray-900">
+										<span className="text-2xl font-bold text-gray1">
 											{analytics.statusDistribution.active +
 												analytics.statusDistribution.inactive +
 												analytics.statusDistribution.pending}
@@ -435,43 +427,43 @@ export default function CNAnalyticsPage() {
 						</div>
 
 						{/* Additional Metrics */}
-						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-							<h3 className="text-lg font-semibold text-gray-900 mb-4">
+						<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+							<h3 className="mb-4 text-lg font-semibold text-gray1">
 								Métricas Adicionales
 							</h3>
-							<div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 								<div className="flex items-center gap-4">
-									<div className="p-3 bg-blue-100 rounded-lg">
-										<Users className="w-6 h-6 text-blue-600" />
+									<div className="rounded-md bg-blue15 p-3">
+										<Users className="h-6 w-6 text-blue6" />
 									</div>
 									<div>
-										<p className="text-sm text-gray-600">
+										<p className="text-sm text-gray4">
 											Usuarios Activos Mes
 										</p>
-										<p className="text-2xl font-bold text-gray-900">
+										<p className="text-2xl font-bold text-gray1">
 											{analytics.activityMetrics.monthlyActiveUsers}
 										</p>
 									</div>
 								</div>
 
 								<div className="flex items-center gap-4">
-									<div className="p-3 bg-purple-100 rounded-lg">
-										<Database className="w-6 h-6 text-purple-600" />
+									<div className="rounded-md bg-gray10 p-3">
+										<Database className="h-6 w-6 text-blue7" />
 									</div>
 									<div>
-										<p className="text-sm text-gray-600">Tablas CN</p>
-										<p className="text-2xl font-bold text-gray-900">0</p>
-										<p className="text-xs text-gray-500">Configurar</p>
+										<p className="text-sm text-gray4">Tablas CN</p>
+										<p className="text-2xl font-bold text-gray1">0</p>
+										<p className="text-xs text-gray5">Configurar</p>
 									</div>
 								</div>
 
 								<div className="flex items-center gap-4">
-									<div className="p-3 bg-green-100 rounded-lg">
-										<Activity className="w-6 h-6 text-green-600" />
+									<div className="rounded-md bg-green6 p-3">
+										<Activity className="h-6 w-6 text-green2" />
 									</div>
 									<div>
-										<p className="text-sm text-gray-600">Tasa Actividad</p>
-										<p className="text-2xl font-bold text-gray-900">
+										<p className="text-sm text-gray4">Tasa Actividad</p>
+										<p className="text-2xl font-bold text-gray1">
 											{analytics.statusDistribution.active > 0
 												? Math.round(
 														(analytics.activityMetrics.weeklyActiveUsers /

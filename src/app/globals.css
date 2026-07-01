@@ -205,7 +205,6 @@ button,
 /* Redondeo para elementos de información del sistema */
 .flex.justify-between {
 	border-radius: 0.25rem;
-	padding: 0.25rem 0;
 }
 
 /* Asegurar redondeo en elementos del dashboard */

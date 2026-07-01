@@ -1,15 +1,16 @@
 "use client";
 import {
 	AlertTriangle,
+	ArrowLeft,
 	Bell,
 	Database,
 	Globe,
 	Key,
 	RefreshCw,
 	Save,
-	Settings,
 	Shield,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface PRSettings {
@@ -76,6 +77,7 @@ export default function PRSettingsPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [savedMessage, setSavedMessage] = useState("");
+	const router = useRouter();
 
 	const loadSettings = useCallback(async () => {
 		try {
@@ -130,80 +132,75 @@ export default function PRSettingsPage() {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-screen">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Cargando configuraciones...</p>
+				<div className="flex items-center justify-center h-screen">
+					<div className="text-center">
+						<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue6 mx-auto mb-4"></div>
+						<p className="text-gray4">Cargando configuraciones...</p>
+					</div>
 				</div>
-			</div>
-		);
-	}
+			);
+		}
 
 	return (
-		<div className="p-4 sm:p-6 max-w-4xl mx-auto">
-			{/* Header */}
-			<div className="mb-6 sm:mb-8">
-				<div className="flex items-center justify-between">
-					<div>
-						<div className="flex items-center gap-3 mb-2">
-							<div className="p-2 bg-orange-100 rounded-lg">
-								<Settings className="w-6 h-6 text-orange-600" />
-							</div>
-							<h1 className="text-2xl sm:text-3xl font-title text-gray-900">
-								Configuraciones PR
-							</h1>
+		<div className="min-h-screen bg-gray10 p-2 sm:p-3 lg:p-4">
+			<div className="w-full max-w-none">
+				<div className="mb-4 rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<button
+							type="button"
+							onClick={() => router.push("/admin/pr")}
+							className="inline-flex w-fit items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-sm font-medium text-gray3 shadow-sm transition-colors duration-200 hover:bg-gray10 hover:text-gray1"
+						>
+							<ArrowLeft className="h-4 w-4" />
+							Volver atrás
+						</button>
+
+						<div className="flex flex-wrap gap-3">
+							<button
+								type="button"
+								onClick={loadSettings}
+								className="flex items-center gap-2 rounded-md border border-gray9 bg-gray10 px-4 py-2 font-medium text-gray3 transition-colors hover:bg-white"
+							>
+								<RefreshCw className="w-4 h-4" />
+								Recargar
+							</button>
+
+							<button
+								type="button"
+								onClick={saveSettings}
+								disabled={isSaving}
+								className="flex items-center gap-2 rounded-md bg-blue6 px-4 py-2 font-medium text-white transition-colors hover:bg-blue5 disabled:bg-blue8"
+							>
+								{isSaving ? (
+									<>
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+										Guardando...
+									</>
+								) : (
+									<>
+										<Save className="w-4 h-4" />
+										Guardar
+									</>
+								)}
+							</button>
 						</div>
-						<p className="text-sm sm:text-base text-gray-600">
-							Configura los parámetros del sistema PR
-						</p>
 					</div>
 
-					<div className="flex items-center gap-3">
-						<button
-							type="button"
-							onClick={loadSettings}
-							className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
+					{savedMessage && (
+						<div
+							className={`mt-4 rounded-md border p-3 text-sm ${savedMessage.includes("Error") ? "border-gold6 bg-gold7 text-gold1" : "border-green6 bg-green6 text-green2"}`}
 						>
-							<RefreshCw className="w-4 h-4" />
-							Recargar
-						</button>
-
-						<button
-							type="button"
-							onClick={saveSettings}
-							disabled={isSaving}
-							className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:bg-orange-400 flex items-center gap-2"
-						>
-							{isSaving ? (
-								<>
-									<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-									Guardando...
-								</>
-							) : (
-								<>
-									<Save className="w-4 h-4" />
-									Guardar
-								</>
-							)}
-						</button>
-					</div>
+							{savedMessage}
+						</div>
+					)}
 				</div>
 
-				{savedMessage && (
-					<div
-						className={`mt-4 p-3 rounded-md ${savedMessage.includes("Error") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}
-					>
-						{savedMessage}
-					</div>
-				)}
-			</div>
-
-			<div className="space-y-8">
+				<div className="space-y-4">
 				{/* General Settings */}
-				<div className="bg-white rounded-lg shadow border p-6">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
 					<div className="flex items-center gap-2 mb-4">
-						<Globe className="w-5 h-5 text-orange-600" />
-						<h2 className="text-lg font-semibold text-gray-900">
+						<Globe className="w-5 h-5 text-blue6" />
+						<h2 className="text-lg font-semibold text-gray1">
 							Configuración General
 						</h2>
 					</div>
@@ -212,7 +209,7 @@ export default function PRSettingsPage() {
 						<div>
 							<label
 								htmlFor="general-site-name"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								Nombre del Sitio
 							</label>
@@ -223,14 +220,14 @@ export default function PRSettingsPage() {
 								onChange={(e) =>
 									handleInputChange("general", "siteName", e.target.value)
 								}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 							/>
 						</div>
 
 						<div>
 							<label
 								htmlFor="general-site-url"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								URL del Sitio
 							</label>
@@ -241,14 +238,14 @@ export default function PRSettingsPage() {
 								onChange={(e) =>
 									handleInputChange("general", "siteUrl", e.target.value)
 								}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 							/>
 						</div>
 
 						<div className="md:col-span-2">
 							<label
 								htmlFor="general-site-description"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								Descripción
 							</label>
@@ -263,14 +260,14 @@ export default function PRSettingsPage() {
 										e.target.value,
 									)
 								}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 							/>
 						</div>
 
 						<div>
 							<label
 								htmlFor="general-admin-email"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								Email de Administrador
 							</label>
@@ -281,14 +278,14 @@ export default function PRSettingsPage() {
 								onChange={(e) =>
 									handleInputChange("general", "adminEmail", e.target.value)
 								}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 							/>
 						</div>
 
 						<div>
 							<label
 								htmlFor="general-timezone"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								Zona Horaria
 							</label>
@@ -298,7 +295,7 @@ export default function PRSettingsPage() {
 								onChange={(e) =>
 									handleInputChange("general", "timezone", e.target.value)
 								}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+								className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 							>
 								<option value="America/Santiago">Chile (Santiago)</option>
 								<option value="UTC">UTC</option>
@@ -310,10 +307,10 @@ export default function PRSettingsPage() {
 				</div>
 
 				{/* Notification Settings */}
-				<div className="bg-white rounded-lg shadow border p-6">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
 					<div className="flex items-center gap-2 mb-4">
-						<Bell className="w-5 h-5 text-orange-600" />
-						<h2 className="text-lg font-semibold text-gray-900">
+						<Bell className="w-5 h-5 text-blue6" />
+						<h2 className="text-lg font-semibold text-gray1">
 							Notificaciones
 						</h2>
 					</div>
@@ -322,14 +319,14 @@ export default function PRSettingsPage() {
 						{Object.entries(settings.notifications).map(([key, value]) => (
 							<div key={key} className="flex items-center justify-between">
 								<div>
-									<p className="font-medium text-gray-900">
+									<p className="font-medium text-gray1">
 										{key === "emailNotifications" && "Notificaciones por Email"}
 										{key === "smsNotifications" && "Notificaciones por SMS"}
 										{key === "systemAlerts" && "Alertas del Sistema"}
 										{key === "userRegistrations" && "Registros de Usuario"}
 										{key === "errorReports" && "Reportes de Error"}
 									</p>
-									<p className="text-sm text-gray-500">
+									<p className="text-sm text-gray5">
 										{key === "emailNotifications" &&
 											"Recibir notificaciones por correo electrónico"}
 										{key === "smsNotifications" &&
@@ -350,7 +347,7 @@ export default function PRSettingsPage() {
 										}
 										className="sr-only peer"
 									/>
-									<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+									<div className="w-11 h-6 bg-gray9 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue6/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray9 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue6"></div>
 								</label>
 							</div>
 						))}
@@ -358,19 +355,19 @@ export default function PRSettingsPage() {
 				</div>
 
 				{/* Security Settings */}
-				<div className="bg-white rounded-lg shadow border p-6">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
 					<div className="flex items-center gap-2 mb-4">
-						<Shield className="w-5 h-5 text-orange-600" />
-						<h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
+						<Shield className="w-5 h-5 text-blue6" />
+						<h2 className="text-lg font-semibold text-gray1">Seguridad</h2>
 					</div>
 
 					<div className="space-y-4">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="font-medium text-gray-900">
+								<p className="font-medium text-gray1">
 									Autenticación de Dos Factores
 								</p>
-								<p className="text-sm text-gray-500">
+								<p className="text-sm text-gray5">
 									Require verificación adicional para iniciar sesión
 								</p>
 							</div>
@@ -387,7 +384,7 @@ export default function PRSettingsPage() {
 									}
 									className="sr-only peer"
 								/>
-								<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+								<div className="w-11 h-6 bg-gray9 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue6/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray9 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue6"></div>
 							</label>
 						</div>
 
@@ -395,7 +392,7 @@ export default function PRSettingsPage() {
 							<div>
 								<label
 									htmlFor="security-password-policy"
-									className="block text-sm font-medium text-gray-700 mb-1"
+									className="block text-sm font-medium text-gray3 mb-1"
 								>
 									Política de Contraseñas
 								</label>
@@ -409,7 +406,7 @@ export default function PRSettingsPage() {
 											e.target.value,
 										)
 									}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+									className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 								>
 									<option value="basic">Básica (6+ caracteres)</option>
 									<option value="medium">
@@ -424,7 +421,7 @@ export default function PRSettingsPage() {
 							<div>
 								<label
 									htmlFor="security-session-timeout"
-									className="block text-sm font-medium text-gray-700 mb-1"
+									className="block text-sm font-medium text-gray3 mb-1"
 								>
 									Tiempo de Sesión (minutos)
 								</label>
@@ -441,7 +438,7 @@ export default function PRSettingsPage() {
 											parseInt(e.target.value, 10),
 										)
 									}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+									className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 								/>
 							</div>
 						</div>
@@ -449,10 +446,10 @@ export default function PRSettingsPage() {
 				</div>
 
 				{/* API Settings */}
-				<div className="bg-white rounded-lg shadow border p-6">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
 					<div className="flex items-center gap-2 mb-4">
-						<Database className="w-5 h-5 text-orange-600" />
-						<h2 className="text-lg font-semibold text-gray-900">
+						<Database className="w-5 h-5 text-blue6" />
+						<h2 className="text-lg font-semibold text-gray1">
 							Configuración API
 						</h2>
 					</div>
@@ -462,7 +459,7 @@ export default function PRSettingsPage() {
 							<div>
 								<label
 									htmlFor="api-url"
-									className="block text-sm font-medium text-gray-700 mb-1"
+									className="block text-sm font-medium text-gray3 mb-1"
 								>
 									URL de la API
 								</label>
@@ -473,14 +470,14 @@ export default function PRSettingsPage() {
 									onChange={(e) =>
 										handleInputChange("api", "apiUrl", e.target.value)
 									}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+									className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 								/>
 							</div>
 
 							<div>
 								<label
 									htmlFor="api-rate-limit"
-									className="block text-sm font-medium text-gray-700 mb-1"
+									className="block text-sm font-medium text-gray3 mb-1"
 								>
 									Límite de Peticiones/hora
 								</label>
@@ -497,7 +494,7 @@ export default function PRSettingsPage() {
 											parseInt(e.target.value, 10),
 										)
 									}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+									className="w-full px-3 py-2 border border-gray9 rounded-md focus:outline-none focus:ring-2 focus:ring-blue6/10 focus:border-blue6"
 								/>
 							</div>
 						</div>
@@ -505,7 +502,7 @@ export default function PRSettingsPage() {
 						<div>
 							<label
 								htmlFor="api-key"
-								className="block text-sm font-medium text-gray-700 mb-1"
+								className="block text-sm font-medium text-gray3 mb-1"
 							>
 								API Key
 							</label>
@@ -515,11 +512,11 @@ export default function PRSettingsPage() {
 									type="password"
 									value={settings.api.apiKey}
 									readOnly
-									className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+									className="flex-1 px-3 py-2 border border-gray9 rounded-md bg-gray10 text-gray5"
 								/>
 								<button
 									type="button"
-									className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center gap-2"
+									className="px-4 py-2 border border-gray9 text-gray3 rounded-md hover:bg-white flex items-center gap-2"
 								>
 									<Key className="w-4 h-4" />
 									Regenerar
@@ -529,8 +526,8 @@ export default function PRSettingsPage() {
 
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="font-medium text-gray-900">Habilitar CORS</p>
-								<p className="text-sm text-gray-500">
+								<p className="font-medium text-gray1">Habilitar CORS</p>
+								<p className="text-sm text-gray5">
 									Permitir peticiones desde otros dominios
 								</p>
 							</div>
@@ -543,14 +540,14 @@ export default function PRSettingsPage() {
 									}
 									className="sr-only peer"
 								/>
-								<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+								<div className="w-11 h-6 bg-gray9 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue6/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray9 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue6"></div>
 							</label>
 						</div>
 					</div>
 				</div>
 
 				{/* Danger Zone */}
-				<div className="bg-red-50 border border-red-200 rounded-lg p-6">
+				<div className="bg-red-50 border border-red-200 rounded-md p-6">
 					<div className="flex items-center gap-2 mb-4">
 						<AlertTriangle className="w-5 h-5 text-red-600" />
 						<h2 className="text-lg font-semibold text-red-900">
@@ -595,7 +592,8 @@ export default function PRSettingsPage() {
 						</div>
 					</div>
 				</div>
+				</div>
 			</div>
 		</div>
-	);
-}
+		);
+	}
