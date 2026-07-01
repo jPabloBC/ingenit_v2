@@ -72,7 +72,7 @@ type CNUserInput = {
 export default function CNUsersPage() {
 	const [users, setUsers] = useState<CNUser[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [realtimeConnected, setRealtimeConnected] = useState(false);
+	const [, setRealtimeConnected] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState<string>("all");
 	const [showCreateModal, setShowCreateModal] = useState(false);
@@ -733,8 +733,8 @@ export default function CNUsersPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<div className="w-full max-w-none px-6 lg:px-12 py-6 sm:py-8">
+		<div className="min-h-screen bg-gray10 p-2 sm:p-3 lg:p-4">
+			<div className="w-full max-w-none">
 				{showCreateModal && (
 					<CNUserModal
 						user={editingUser}
@@ -758,139 +758,134 @@ export default function CNUsersPage() {
 						}}
 					/>
 				)}
-				{/* Header */}
-				<div className="mb-6 sm:mb-8">
-					<div className="flex items-center gap-3 mb-4">
+				<div className="mb-4">
+					<div className="mb-4 flex items-center justify-start">
 						<button
 							type="button"
 							onClick={() => router.push("/admin/cn")}
-							className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+							className="inline-flex items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-sm font-medium text-gray3 shadow-sm transition-colors duration-200 hover:bg-gray10 hover:text-gray1"
 						>
-							<ArrowLeft className="w-5 h-5 text-gray-600" />
+							<ArrowLeft className="h-4 w-4" />
+							Volver atrás
 						</button>
-						<div>
-							<h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-								<Users className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-600" />
-								Gestión de Usuarios CN
-							</h1>
-							<p className="text-sm sm:text-base text-gray-600 mt-1">
-								Administra los usuarios de cn.ingenit.cl
-							</p>
-						</div>
 					</div>
 
 					{/* Search and Filters */}
-					<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-						<div className="flex-1 w-full sm:max-w-md">
-							<div className="relative">
-								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-								<input
-									type="text"
-									placeholder="Buscar por nombre, email o teléfono..."
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-								/>
-							</div>
-						</div>
-
-						<div className="flex gap-2 w-full sm:w-auto">
-							<div className="relative flex-1 sm:flex-none">
-								<Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-								<select
-									value={statusFilter}
-									onChange={(e) => setStatusFilter(e.target.value)}
-									className="pl-10 pr-8 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent appearance-none bg-white w-full sm:w-auto"
-								>
-									<option value="all">Todos los estados</option>
-									<option value="active">Activos</option>
-									<option value="inactive">Inactivos</option>
-									<option value="pending">Pendientes</option>
-								</select>
+					<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+						<div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+							<div className="flex-1 w-full sm:max-w-md">
+								<div className="relative">
+									<Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray6" />
+									<input
+										type="text"
+										placeholder="Buscar por nombre, email o teléfono..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="w-full rounded-md border border-gray9 bg-white py-2 pl-10 pr-4 text-sm text-gray3 shadow-sm placeholder:text-gray6 focus:border-blue6 focus:ring-2 focus:ring-blue6/10"
+									/>
+								</div>
 							</div>
 
-							<button
-								type="button"
-								onClick={openCreateModal}
-								className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors font-medium whitespace-nowrap"
-							>
-								<Plus className="w-4 h-4" />
-								Nuevo Usuario
-							</button>
-							<button
-								type="button"
-								onClick={handleRefresh}
-								className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-colors font-medium"
-								title="Refrescar lista"
-							>
-								Refrescar
-							</button>
-							<div className="flex items-center ml-2">
-								<span
-									className={`px-2 py-1 text-xs font-medium rounded-full border ${realtimeConnected ? "bg-green-100 text-green-800 border-green-200" : "bg-yellow-100 text-yellow-800 border-yellow-200"}`}
+							<div className="flex gap-2 w-full sm:w-auto">
+								<div className="relative flex-1 sm:flex-none">
+									<Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray6" />
+									<select
+										value={statusFilter}
+										onChange={(e) => setStatusFilter(e.target.value)}
+										className="w-full appearance-none rounded-md border border-gray9 bg-white py-2 pl-10 pr-8 text-sm text-gray3 shadow-sm focus:border-blue6 focus:ring-2 focus:ring-blue6/10 sm:w-auto"
+									>
+										<option value="all">Todos los estados</option>
+										<option value="active">Activos</option>
+										<option value="inactive">Inactivos</option>
+										<option value="pending">Pendientes</option>
+									</select>
+								</div>
+
+								<button
+									type="button"
+									onClick={openCreateModal}
+									className="flex items-center gap-2 whitespace-nowrap rounded-md bg-blue6 px-4 py-2 font-medium text-white transition-colors hover:bg-blue5"
 								>
-									{realtimeConnected ? "Realtime" : "Polling"}
-								</span>
+									<Plus className="w-4 h-4" />
+									Nuevo Usuario
+								</button>
+								<button
+									type="button"
+									onClick={handleRefresh}
+									className="flex items-center gap-2 rounded-md border border-gray9 bg-gray10 px-4 py-2 font-medium text-gray3 transition-colors hover:bg-white"
+									title="Refrescar lista"
+								>
+									Refrescar
+								</button>
 							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Stats */}
-				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+				<div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+						<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-gray-600">Total</p>
-								<p className="text-2xl font-bold text-gray-900">
+								<p className="text-sm font-medium text-gray4">Total</p>
+								<p className="mt-2 text-3xl font-bold leading-none text-gray1">
 									{users.length}
 								</p>
 							</div>
-							<Users className="w-8 h-8 text-cyan-600" />
+							<div className="rounded-md bg-blue15 p-3">
+								<Users className="h-6 w-6 text-blue6" />
+							</div>
 						</div>
 					</div>
 
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+					<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+						<div className="absolute inset-x-0 top-0 h-1 bg-green2" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-gray-600">Activos</p>
-								<p className="text-2xl font-bold text-green-600">
+								<p className="text-sm font-medium text-gray4">Activos</p>
+								<p className="mt-2 text-3xl font-bold leading-none text-green2">
 									{users.filter((u) => u.status === "active").length}
 								</p>
 							</div>
-							<CheckCircle className="w-8 h-8 text-emerald-600" />
+							<div className="rounded-md bg-green6 p-3">
+								<CheckCircle className="h-6 w-6 text-green2" />
+							</div>
 						</div>
 					</div>
 
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+					<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+						<div className="absolute inset-x-0 top-0 h-1 bg-gold3" />
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-gray-600">Pendientes</p>
-								<p className="text-2xl font-bold text-amber-600">
+								<p className="text-sm font-medium text-gray4">Pendientes</p>
+								<p className="mt-2 text-3xl font-bold leading-none text-gold2">
 									{users.filter((u) => u.status === "pending").length}
 								</p>
 							</div>
-							<Calendar className="w-8 h-8 text-amber-600" />
+							<div className="rounded-md bg-gold7 p-3">
+								<Calendar className="h-6 w-6 text-gold2" />
+							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Users Table */}
-				<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+				<div className="overflow-hidden rounded-md border border-gray9 bg-white shadow-sm">
 					<div>
 						{isLoading ? (
 							<div className="flex items-center justify-center py-12">
-								<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+								<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue6"></div>
 							</div>
 						) : filteredUsers.length > 0 ? (
 							<>
-								<div className="md:hidden divide-y divide-gray-200">
+								<div className="md:hidden divide-y divide-gray9">
 									{filteredUsers.map((user) => (
 										<div key={user.id} className="p-4">
 											<div className="flex items-start justify-between gap-3">
 												<div className="flex items-center gap-3 min-w-0">
-													<div className="flex-shrink-0 h-10 w-10 bg-cyan-100 rounded-full flex items-center justify-center">
-														<Users className="h-5 w-5 text-cyan-600" />
+													<div className="flex-shrink-0 h-10 w-10 bg-blue15 rounded-full flex items-center justify-center">
+														<Users className="h-5 w-5 text-blue6" />
 													</div>
 													<div className="min-w-0">
 														<div className="text-sm font-medium text-gray-900 truncate">
@@ -1052,13 +1047,13 @@ export default function CNUsersPage() {
 											</div>
 
 											{expandedUserId === user.id && (
-												<div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-3">
+												<div className="mt-4 rounded-md border border-gray9 bg-gray10 p-3">
 													<h4 className="text-sm font-semibold text-gray-900 mb-2">
 														Historial de Sesiones
 													</h4>
 													{loadingSessionsForUser === user.id ? (
 														<div className="flex items-center justify-center py-4">
-															<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600"></div>
+															<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue6"></div>
 														</div>
 													) : (userSessions.get(user.id) || []).length > 0 ? (
 														<div className="space-y-2">
@@ -1066,7 +1061,7 @@ export default function CNUsersPage() {
 																(session) => (
 																	<div
 																		key={session.id}
-																		className="rounded-md border border-gray-200 bg-white p-2"
+																		className="rounded-md border border-gray9 bg-white p-2"
 																	>
 																		<div className="flex items-center justify-between gap-2">
 																			<div className="text-xs text-gray-600 font-mono">
@@ -1134,7 +1129,7 @@ export default function CNUsersPage() {
 
 								<div className="hidden md:block overflow-x-auto">
 									<table className="w-full">
-										<thead className="bg-gray-50 border-b border-gray-200">
+										<thead className="border-b border-gray9 bg-gray10">
 											<tr>
 												<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
 												<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1163,10 +1158,10 @@ export default function CNUsersPage() {
 												</th>
 											</tr>
 										</thead>
-										<tbody className="divide-y divide-gray-200">
+										<tbody className="divide-y divide-gray9">
 											{filteredUsers.map((user) => (
 												<React.Fragment key={user.id}>
-													<tr className="hover:bg-gray-50 transition-colors">
+													<tr className="transition-colors hover:bg-gray10">
 														<td className="px-3 py-4 text-center">
 															<button
 																type="button"
@@ -1187,8 +1182,8 @@ export default function CNUsersPage() {
 														</td>
 														<td className="px-6 py-4">
 															<div className="flex items-center">
-																<div className="flex-shrink-0 h-10 w-10 bg-cyan-100 rounded-full flex items-center justify-center">
-																	<Users className="h-5 w-5 text-cyan-600" />
+																<div className="flex-shrink-0 h-10 w-10 bg-blue15 rounded-full flex items-center justify-center">
+																	<Users className="h-5 w-5 text-blue6" />
 																</div>
 																<div className="ml-4">
 																	<div className="text-sm font-medium text-gray-900">
@@ -1334,7 +1329,7 @@ export default function CNUsersPage() {
 														</td>
 													</tr>
 													{expandedUserId === user.id && (
-														<tr className="bg-gray-25 border-b border-gray-200">
+														<tr className="border-b border-gray9 bg-gray10">
 															<td colSpan={9} className="px-6 py-4">
 																<div className="space-y-4">
 																	<div>
@@ -1343,13 +1338,13 @@ export default function CNUsersPage() {
 																		</h4>
 																		{loadingSessionsForUser === user.id ? (
 																			<div className="flex items-center justify-center py-4">
-																				<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600"></div>
+																				<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue6"></div>
 																			</div>
 																		) : (userSessions.get(user.id) || [])
 																				.length > 0 ? (
 																			<div className="overflow-x-auto">
 																				<table className="w-full text-sm">
-																					<thead className="bg-gray-50 border-b border-gray-200">
+																					<thead className="border-b border-gray9 bg-white">
 																						<tr>
 																							<th className="px-4 py-2 text-left text-xs font-medium text-gray-600">
 																								ID
@@ -1371,13 +1366,13 @@ export default function CNUsersPage() {
 																							</th>
 																						</tr>
 																					</thead>
-																					<tbody className="divide-y divide-gray-200">
+																					<tbody className="divide-y divide-gray9">
 																						{(
 																							userSessions.get(user.id) || []
 																						).map((session) => (
 																							<tr
 																								key={session.id}
-																								className="hover:bg-gray-50"
+																								className="hover:bg-white"
 																							>
 																								<td className="px-4 py-2 text-xs text-gray-600 font-mono">
 																									{session.id.slice(0, 8)}
@@ -1455,7 +1450,7 @@ export default function CNUsersPage() {
 								<button
 									type="button"
 									onClick={() => setShowCreateModal(true)}
-									className="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors"
+									className="mt-4 px-4 py-2 bg-blue6 hover:bg-blue5 text-white rounded-md transition-colors"
 								>
 									Crear primer usuario
 								</button>
@@ -1524,7 +1519,7 @@ export default function CNUsersPage() {
 												onClick={() => setBanMode("duration")}
 												className={`px-3 py-2 text-sm rounded-md transition-colors ${
 													banMode === "duration"
-														? "bg-white border border-cyan-300 text-cyan-700 shadow-sm"
+														? "bg-white border border-blue13 text-blue6 shadow-sm"
 														: "text-gray-700 hover:bg-white"
 												}`}
 											>
@@ -1535,7 +1530,7 @@ export default function CNUsersPage() {
 												onClick={() => setBanMode("calendar")}
 												className={`px-3 py-2 text-sm rounded-md transition-colors ${
 													banMode === "calendar"
-														? "bg-white border border-cyan-300 text-cyan-700 shadow-sm"
+														? "bg-white border border-blue13 text-blue6 shadow-sm"
 														: "text-gray-700 hover:bg-white"
 												}`}
 											>

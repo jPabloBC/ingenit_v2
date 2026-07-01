@@ -224,7 +224,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 			{/* Contenido principal que se adapta al sidebar */}
 			<div
 				className={`${needsFullHeight ? "h-screen" : "min-h-screen"} transition-all duration-300 overflow-y-auto ${
-					isCollapsed ? "lg:ml-16" : "lg:ml-64"
+					isCollapsed ? "lg:ml-16" : "lg:ml-72"
 				}`}
 			>
 				{needsFullHeight ? (

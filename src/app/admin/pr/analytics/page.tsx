@@ -1,6 +1,7 @@
 "use client";
 import {
 	Activity,
+	ArrowLeft,
 	BarChart3,
 	Download,
 	Globe,
@@ -8,6 +9,7 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface AnalyticsData {
@@ -44,6 +46,7 @@ export default function PRAnalyticsPage() {
 	});
 	const [isLoading, setIsLoading] = useState(true);
 	const [dateRange, setDateRange] = useState("7d");
+	const router = useRouter();
 
 	const loadAnalyticsData = useCallback(async () => {
 		try {
@@ -90,54 +93,37 @@ export default function PRAnalyticsPage() {
 		return `${minutes}m ${remainingSeconds}s`;
 	};
 
-	const _getDateRangeLabel = (range: string) => {
-		switch (range) {
-			case "7d":
-				return "Últimos 7 días";
-			case "30d":
-				return "Últimos 30 días";
-			case "90d":
-				return "Últimos 90 días";
-			default:
-				return "Últimos 7 días";
-		}
-	};
-
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-					<p className="text-gray-600">Cargando analytics...</p>
+					<div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue6"></div>
+					<p className="text-gray4">Cargando analytics...</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="p-4 sm:p-6">
-			{/* Header */}
-			<div className="mb-6 sm:mb-8">
-				<div className="flex items-center justify-between">
-					<div>
-						<div className="flex items-center gap-3 mb-2">
-							<div className="p-2 bg-orange-100 rounded-lg">
-								<BarChart3 className="w-6 h-6 text-orange-600" />
-							</div>
-							<h1 className="text-2xl sm:text-3xl font-title text-gray-900">
-								Analytics PR
-							</h1>
-						</div>
-						<p className="text-sm sm:text-base text-gray-600">
-							Análisis y métricas del proyecto PR
-						</p>
-					</div>
+		<div className="min-h-screen bg-gray10 p-2 sm:p-3 lg:p-4">
+			<div className="mb-4">
+				<div className="mb-4 flex items-center justify-start">
+					<button
+						type="button"
+						onClick={() => router.push("/admin/pr")}
+						className="inline-flex items-center gap-2 rounded-md border border-gray9 bg-white px-3 py-2 text-sm font-medium text-gray3 shadow-sm transition-colors duration-200 hover:bg-gray10 hover:text-gray1"
+					>
+						<ArrowLeft className="h-4 w-4" />
+						Volver atrás
+					</button>
+				</div>
 
-					<div className="flex items-center gap-3">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<select
 							value={dateRange}
 							onChange={(e) => setDateRange(e.target.value)}
-							className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+							className="rounded-md border border-gray9 bg-white px-3 py-2 text-sm text-gray3 shadow-sm focus:border-blue6 focus:outline-none focus:ring-2 focus:ring-blue6/10"
 						>
 							<option value="7d">Últimos 7 días</option>
 							<option value="30d">Últimos 30 días</option>
@@ -147,7 +133,7 @@ export default function PRAnalyticsPage() {
 						<button
 							type="button"
 							onClick={loadAnalyticsData}
-							className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center gap-2"
+							className="flex items-center gap-2 rounded-md bg-blue6 px-4 py-2 font-medium text-white transition-colors hover:bg-blue5"
 						>
 							<RefreshCw className="w-4 h-4" />
 							Actualizar
@@ -155,7 +141,7 @@ export default function PRAnalyticsPage() {
 
 						<button
 							type="button"
-							className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-2"
+							className="flex items-center gap-2 rounded-md border border-gray9 bg-gray10 px-4 py-2 font-medium text-gray3 transition-colors hover:bg-white"
 						>
 							<Download className="w-4 h-4" />
 							Exportar
@@ -165,97 +151,101 @@ export default function PRAnalyticsPage() {
 			</div>
 
 			{/* Key Metrics */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-				<div className="bg-white p-6 rounded-lg shadow border">
+			<div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue6" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">
+							<p className="text-sm font-medium text-gray4">
 								Visitas Totales
 							</p>
-							<p className="text-2xl font-bold text-gray-900">
+							<p className="mt-2 text-3xl font-bold leading-none text-gray1">
 								{analyticsData.totalVisits.toLocaleString()}
 							</p>
 							{analyticsData.totalVisits > 0 && (
-								<p className="text-xs text-green-600 mt-1">
+								<p className="mt-2 text-xs text-green2">
 									+12.5% vs período anterior
 								</p>
 							)}
 						</div>
-						<div className="p-3 bg-blue-100 rounded-full">
-							<Globe className="w-6 h-6 text-blue-600" />
+						<div className="rounded-md bg-blue15 p-3">
+							<Globe className="h-6 w-6 text-blue6" />
 						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-6 rounded-lg shadow border">
+				<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="absolute inset-x-0 top-0 h-1 bg-green2" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">
+							<p className="text-sm font-medium text-gray4">
 								Usuarios Únicos
 							</p>
-							<p className="text-2xl font-bold text-gray-900">
+							<p className="mt-2 text-3xl font-bold leading-none text-gray1">
 								{analyticsData.uniqueUsers.toLocaleString()}
 							</p>
 							{analyticsData.uniqueUsers > 0 && (
-								<p className="text-xs text-green-600 mt-1">
+								<p className="mt-2 text-xs text-green2">
 									+8.3% vs período anterior
 								</p>
 							)}
 						</div>
-						<div className="p-3 bg-green-100 rounded-full">
-							<Users className="w-6 h-6 text-green-600" />
+						<div className="rounded-md bg-green6 p-3">
+							<Users className="h-6 w-6 text-green2" />
 						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-6 rounded-lg shadow border">
+				<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="absolute inset-x-0 top-0 h-1 bg-gold3" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">
+							<p className="text-sm font-medium text-gray4">
 								Tasa de Rebote
 							</p>
-							<p className="text-2xl font-bold text-gray-900">
+							<p className="mt-2 text-3xl font-bold leading-none text-gray1">
 								{analyticsData.bounceRate}%
 							</p>
 							{analyticsData.bounceRate > 0 && (
-								<p className="text-xs text-red-600 mt-1">
+								<p className="mt-2 text-xs text-gold2">
 									+2.1% vs período anterior
 								</p>
 							)}
 						</div>
-						<div className="p-3 bg-red-100 rounded-full">
-							<TrendingUp className="w-6 h-6 text-red-600" />
+						<div className="rounded-md bg-gold7 p-3">
+							<TrendingUp className="h-6 w-6 text-gold2" />
 						</div>
 					</div>
 				</div>
 
-				<div className="bg-white p-6 rounded-lg shadow border">
+				<div className="relative overflow-hidden rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<div className="absolute inset-x-0 top-0 h-1 bg-blue7" />
 					<div className="flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-gray-600">
+							<p className="text-sm font-medium text-gray4">
 								Duración Promedio
 							</p>
-							<p className="text-2xl font-bold text-gray-900">
+							<p className="mt-2 text-3xl font-bold leading-none text-gray1">
 								{formatDuration(analyticsData.avgSessionDuration)}
 							</p>
 							{analyticsData.avgSessionDuration > 0 && (
-								<p className="text-xs text-green-600 mt-1">
+								<p className="mt-2 text-xs text-green2">
 									+15.2% vs período anterior
 								</p>
 							)}
 						</div>
-						<div className="p-3 bg-purple-100 rounded-full">
-							<Activity className="w-6 h-6 text-purple-600" />
+						<div className="rounded-md bg-gray10 p-3">
+							<Activity className="h-6 w-6 text-blue7" />
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Charts Row */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+			<div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
 				{/* Traffic Over Time */}
-				<div className="bg-white p-6 rounded-lg shadow border">
-					<h2 className="text-lg font-semibold text-gray-900 mb-4">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<h2 className="mb-4 text-lg font-semibold text-gray1">
 						Tráfico en el Tiempo
 					</h2>
 					<div className="h-64 flex items-end justify-between gap-2">
@@ -265,18 +255,18 @@ export default function PRAnalyticsPage() {
 								className="flex-1 flex flex-col items-center"
 							>
 								<div
-									className="w-full bg-orange-200 rounded-t relative"
+									className="relative w-full rounded-t bg-blue15"
 									style={{
 										height: `${(item.visits / 2000) * 100}%`,
 										minHeight: "4px",
 									}}
 								>
 									<div
-										className="w-full bg-orange-500 rounded-t"
+										className="w-full rounded-t bg-blue6"
 										style={{ height: `${(item.users / item.visits) * 100}%` }}
 									></div>
 								</div>
-								<span className="text-xs text-gray-500 mt-1 transform rotate-45 origin-left">
+								<span className="mt-1 origin-left rotate-45 transform text-xs text-gray5">
 									{new Date(item.date).toLocaleDateString("es-CL", {
 										month: "short",
 										day: "numeric",
@@ -287,19 +277,19 @@ export default function PRAnalyticsPage() {
 					</div>
 					<div className="flex items-center justify-center gap-4 mt-4">
 						<div className="flex items-center gap-2">
-							<div className="w-3 h-3 bg-orange-500 rounded"></div>
-							<span className="text-sm text-gray-600">Usuarios</span>
+							<div className="h-3 w-3 rounded bg-blue6"></div>
+							<span className="text-sm text-gray4">Usuarios</span>
 						</div>
 						<div className="flex items-center gap-2">
-							<div className="w-3 h-3 bg-orange-200 rounded"></div>
-							<span className="text-sm text-gray-600">Visitas</span>
+							<div className="h-3 w-3 rounded bg-blue15"></div>
+							<span className="text-sm text-gray4">Visitas</span>
 						</div>
 					</div>
 				</div>
 
 				{/* Top Pages */}
-				<div className="bg-white p-6 rounded-lg shadow border">
-					<h2 className="text-lg font-semibold text-gray-900 mb-4">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<h2 className="mb-4 text-lg font-semibold text-gray1">
 						Páginas Más Visitadas
 					</h2>
 					{analyticsData.topPages.length > 0 ? (
@@ -311,16 +301,16 @@ export default function PRAnalyticsPage() {
 								>
 									<div className="flex-1">
 										<div className="flex items-center justify-between mb-1">
-											<span className="text-sm font-medium text-gray-900">
+											<span className="text-sm font-medium text-gray1">
 												{page.page}
 											</span>
-											<span className="text-sm text-gray-500">
+											<span className="text-sm text-gray5">
 												{page.views.toLocaleString()}
 											</span>
 										</div>
-										<div className="w-full bg-gray-200 rounded-full h-2">
+										<div className="h-2 w-full rounded-full bg-gray10">
 											<div
-												className="bg-orange-500 h-2 rounded-full"
+												className="h-2 rounded-full bg-blue6"
 												style={{ width: `${page.percentage}%` }}
 											></div>
 										</div>
@@ -330,11 +320,11 @@ export default function PRAnalyticsPage() {
 						</div>
 					) : (
 						<div className="text-center py-8">
-							<BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-							<p className="text-gray-500">
+							<BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray7" />
+							<p className="text-gray5">
 								No hay datos de páginas disponibles
 							</p>
-							<p className="text-sm text-gray-400">
+							<p className="text-sm text-gray6">
 								Los datos aparecerán cuando haya tráfico registrado
 							</p>
 						</div>
@@ -343,10 +333,10 @@ export default function PRAnalyticsPage() {
 			</div>
 
 			{/* Bottom Row */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 				{/* Traffic Sources */}
-				<div className="bg-white p-6 rounded-lg shadow border">
-					<h2 className="text-lg font-semibold text-gray-900 mb-4">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<h2 className="mb-4 text-lg font-semibold text-gray1">
 						Fuentes de Tráfico
 					</h2>
 					<div className="space-y-4">
@@ -362,15 +352,15 @@ export default function PRAnalyticsPage() {
 											backgroundColor: `hsl(${source.source.length * 17}, 70%, 50%)`,
 										}}
 									></div>
-									<span className="text-sm font-medium text-gray-900">
+									<span className="text-sm font-medium text-gray1">
 										{source.source}
 									</span>
 								</div>
 								<div className="text-right">
-									<span className="text-sm font-medium text-gray-900">
+									<span className="text-sm font-medium text-gray1">
 										{source.visitors.toLocaleString()}
 									</span>
-									<span className="text-xs text-gray-500 ml-2">
+									<span className="ml-2 text-xs text-gray5">
 										({source.percentage}%)
 									</span>
 								</div>
@@ -380,44 +370,44 @@ export default function PRAnalyticsPage() {
 				</div>
 
 				{/* Recent Activity */}
-				<div className="bg-white p-6 rounded-lg shadow border">
-					<h2 className="text-lg font-semibold text-gray-900 mb-4">
+				<div className="rounded-md border border-gray9 bg-white p-4 shadow-sm">
+					<h2 className="mb-4 text-lg font-semibold text-gray1">
 						Actividad Reciente
 					</h2>
 					<div className="space-y-4">
-						<div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-							<div className="p-2 bg-blue-100 rounded-full">
-								<Users className="w-4 h-4 text-blue-600" />
+						<div className="flex items-center gap-3 rounded-md border border-gray9 bg-gray10 p-3">
+							<div className="rounded-md bg-white p-2 text-blue6 shadow-sm">
+								<Users className="h-4 w-4" />
 							</div>
 							<div>
-								<p className="text-sm font-medium text-gray-900">
+								<p className="text-sm font-medium text-gray1">
 									Nuevo usuario registrado
 								</p>
-								<p className="text-xs text-gray-500">Hace 2 minutos</p>
+								<p className="text-xs text-gray5">Hace 2 minutos</p>
 							</div>
 						</div>
 
-						<div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-							<div className="p-2 bg-green-100 rounded-full">
-								<Activity className="w-4 h-4 text-green-600" />
+						<div className="flex items-center gap-3 rounded-md border border-gray9 bg-gray10 p-3">
+							<div className="rounded-md bg-white p-2 text-green2 shadow-sm">
+								<Activity className="h-4 w-4" />
 							</div>
 							<div>
-								<p className="text-sm font-medium text-gray-900">
+								<p className="text-sm font-medium text-gray1">
 									Pico de tráfico detectado
 								</p>
-								<p className="text-xs text-gray-500">Hace 15 minutos</p>
+								<p className="text-xs text-gray5">Hace 15 minutos</p>
 							</div>
 						</div>
 
-						<div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-							<div className="p-2 bg-orange-100 rounded-full">
-								<Globe className="w-4 h-4 text-orange-600" />
+						<div className="flex items-center gap-3 rounded-md border border-gray9 bg-gray10 p-3">
+							<div className="rounded-md bg-white p-2 text-gold2 shadow-sm">
+								<Globe className="h-4 w-4" />
 							</div>
 							<div>
-								<p className="text-sm font-medium text-gray-900">
+								<p className="text-sm font-medium text-gray1">
 									Nueva página indexada
 								</p>
-								<p className="text-xs text-gray-500">Hace 1 hora</p>
+								<p className="text-xs text-gray5">Hace 1 hora</p>
 							</div>
 						</div>
 					</div>

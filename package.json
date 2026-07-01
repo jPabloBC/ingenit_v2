@@ -7,7 +7,7 @@
 		"build": "next build",
 		"build:safe": "next build",
 		"start": "next start",
-		"lint": "next lint",
+		"lint": "eslint .",
 		"biome:check": "biome check src",
 		"biome:check:all": "biome check .",
 		"backup": "git add . && git commit -m 'Backup automático: $(date)'",

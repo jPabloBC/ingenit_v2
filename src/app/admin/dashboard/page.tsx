@@ -594,8 +594,7 @@ export default function AdminDashboard() {
 					</h3>
 					<div className="space-y-3 text-sm">
 						<div
-							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10"
-							style={{ padding: "12px" }}
+							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10 p-3"
 						>
 							<span className="flex min-w-0 items-center gap-3 text-gray5">
 								<span className="rounded-md bg-white p-2 text-blue6 shadow-sm">
@@ -606,8 +605,7 @@ export default function AdminDashboard() {
 							<span className="shrink-0 pr-1 font-medium text-gray1">1.0.0</span>
 						</div>
 						<div
-							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10"
-							style={{ padding: "12px" }}
+							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10 p-3"
 						>
 							<span className="flex min-w-0 items-center gap-3 text-gray5">
 								<span className="rounded-md bg-white p-2 text-green2 shadow-sm">
@@ -618,8 +616,7 @@ export default function AdminDashboard() {
 							<span className="shrink-0 pr-1 font-medium text-green2">Activo</span>
 						</div>
 						<div
-							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10"
-							style={{ padding: "12px" }}
+							className="flex items-center justify-between gap-8 rounded-md border border-gray9 bg-gray10 p-3"
 						>
 							<span className="flex min-w-0 items-center gap-3 text-gray5">
 								<span className="rounded-md bg-white p-2 text-gold2 shadow-sm">
